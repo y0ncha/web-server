@@ -18,14 +18,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\Desktop\TCP client.cpp">
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Desktop\TCP_server_Blocking.cpp">
       <Filter>Documents</Filter>
-    </Text>
-    <Text Include="..\..\..\Desktop\TCP server Blocking.cpp">
+    </ClCompile>
+    <ClCompile Include="..\..\..\Desktop\TCP_server_NonBlocking.cpp">
       <Filter>Documents</Filter>
-    </Text>
-    <Text Include="..\..\..\Desktop\TCP server NonBlocking.cpp">
-      <Filter>Documents</Filter>
-    </Text>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
