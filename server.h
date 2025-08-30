@@ -3,46 +3,33 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <winsock2.h>
+#pragma comment(lib, "Ws2_32.lib")
 #include <string>
 #include <iostream>
-#pragma comment(lib, "Ws2_32.lib")
-
-using namespace std;
+#include <map>
+#include <ctime>
+#include <algorithm>
+#include <vector>
+#include "client.h"
+#include "utils.h"
+#include "http_utils.h"
 
 class Server {
 public:
-    Server();
+    Server(const std::string& ip, int port, std::size_t buffer_size = 512);
     ~Server();
     void run();
 private:
-    enum class SocketType {
-        Empty = 0,
-        Listen = 1,
-        Receive = 2,
-        Idle = 3,
-        Send = 4
-    };
-    enum class SendSubType {
-        None = 0,
-        Time = 1,
-        Seconds = 2
-    };
-    struct SocketState {
-        SOCKET id = INVALID_SOCKET;
-        SocketType recv = SocketType::Empty;
-        SocketType send = SocketType::Idle;
-        SendSubType sendSubType = SendSubType::None;
-        std::string buffer;
-    };
-    static const int SERVER_PORT = 27015;
-    static const int MAX_SOCKETS = 60;
-    SocketState sockets[MAX_SOCKETS] = {};
-    int socketsCount = 0;
+    std::string ip_;
+    int port_;
     SOCKET listenSocket = INVALID_SOCKET;
-    bool addSocket(SOCKET id, SocketType what);
-    void removeSocket(int index);
-    void acceptConnection(int index);
-    void receiveMessage(int index);
-    void sendMessage(int index);
+    sockaddr_in serverService_;
+    std::map<SOCKET, Client> clients;
+    const std::size_t recv_buffer_size_;
+    bool listen();
+    void acceptConnection();
+    void receiveMessage(SOCKET socket);
+    void sendMessage(SOCKET socket);
+    void reportError(const std::string& msg, bool cleanupWSA);
 };
 
