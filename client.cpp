@@ -1,7 +1,9 @@
 #include "client.h"
 
-Client::Client(SOCKET s)
-    : socket(s), ready_to_send(false), request_complete(false) {
+Client::Client(SOCKET s) : socket(s),last_active(0), state(ClientState::AwaitingData) {}
+
+void Client::bufferRequest(const std::string& data) {
     last_active = time(nullptr);
+    in_buffer.append(data);
+    state = ClientState::RequestBuffered;
 }
-// No need for manual delete, unique_ptr handles cleanup

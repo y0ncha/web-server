@@ -31,5 +31,6 @@ private:
     void receiveMessage(SOCKET socket);
     void sendMessage(SOCKET socket);
     void reportError(const std::string& msg, bool cleanupWSA);
+    bool addClient(SOCKET clientSocket);
 };
 
