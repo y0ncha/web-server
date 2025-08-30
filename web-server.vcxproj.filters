@@ -13,5 +13,19 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Documents">
+      <UniqueIdentifier>{68a693e9-599d-487e-94eb-34fbe7420b96}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\Desktop\TCP client.cpp">
+      <Filter>Documents</Filter>
+    </Text>
+    <Text Include="..\..\..\Desktop\TCP server Blocking.cpp">
+      <Filter>Documents</Filter>
+    </Text>
+    <Text Include="..\..\..\Desktop\TCP server NonBlocking.cpp">
+      <Filter>Documents</Filter>
+    </Text>
   </ItemGroup>
 </Project>
