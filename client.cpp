@@ -33,16 +33,16 @@ void Client::setResponseReady() {
     state = ClientState::ResponseReady;
     std::cout << "Client [" << client_addr << "] state changed to ResponseReady\n";
 }
-void Client::setFinished() {
+void Client::setCompleted() {
     out_buffer.clear();
     parsed_request.reset();
     pending_response.reset();
     state = ClientState::Completed;
-    std::cout << "Client [" << client_addr << "] state changed to Finished\n";
+    std::cout << "Client [" << client_addr << "] state changed to Completed\n";
 }
-void Client::setTerminated() {
+void Client::setAbort() {
     state = ClientState::Abort;
-    std::cout << "Client [" << client_addr << "] state changed to Terminated\n";
+    std::cout << "Client [" << client_addr << "] state changed to Aborted\n";
 }
 
 bool Client::isIdle(int timeout_sec) const {

@@ -61,7 +61,7 @@ public:
     void setAwaitingRequest();
     void setRequestBuffered(const std::string& data);
     void setResponseReady();
-    void setFinished();
-    void setTerminated();
+    void setCompleted();
+    void setAbort();
     bool isIdle(int timeout_sec = 120) const;
 };
