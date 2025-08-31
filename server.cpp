@@ -1,7 +1,7 @@
 #include "server.h"
 
 Server::Server(const std::string& ip, int port, std::size_t buffer_size)
-    : ip_(ip), port_(port), recv_buffer_size_(buffer_size)
+    : ip_(ip), port_(port), RECVBUFF_SIZE(buffer_size)
 {
 	// Initialize Winsock, if fails set listenSocket to INVALID_SOCKET and return
     WSAData wsaData;
@@ -30,15 +30,12 @@ Server::Server(const std::string& ip, int port, std::size_t buffer_size)
 }
 
 Server::~Server() {
-	// Close all client sockets
-    for (auto& kv : clients) {
-        closesocket(kv.second.socket);
-    }
-	// Close the listening socket
+
+    // Close the listening socket
     if (listenSocket != INVALID_SOCKET) {
         closesocket(listenSocket);
     }
-	// Cleanup Winsock
+    // Cleanup Winsock
     WSACleanup();
     std::cout << "Web Server: Closing Connection.\n";
 }
@@ -69,132 +66,193 @@ bool Server::listen() {
     return true;
 }
 
+bool Server::addClient(SOCKET clientSocket, const sockaddr_in& addr) {
+
+    unsigned long flag = 1;
+	// Set the client socket to be non-blocking
+    if (ioctlsocket(clientSocket, FIONBIO, &flag) != NO_ERROR) {
+        closesocket(clientSocket);
+        return false;
+    }
+	// Emplace a new client into the clients map
+    auto result = clients.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(clientSocket),
+        std::forward_as_tuple(clientSocket, addr)
+    );
+	// If insertion failed, close the socket and return false
+    if (!result.second) {
+        closesocket(clientSocket);
+        return false;
+    }
+    return true;
+}
+
+void Server::dispatch(Client& client) {
+    // FSM Step: RequestBuffered ? ResponseReady or Terminated
+    // Parse request and build response. For now, stub implementation.
+    // On success:
+    client.out_buffer = "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 2\r\n\r\nOK";
+    client.setResponseReady();
+    // On failure, call client.setTerminated();
+}
+
 void Server::acceptConnection() {
+
+	// Accept a new client connection
     sockaddr_in from;
     int fromLen = sizeof(from);
     SOCKET msgSocket = accept(listenSocket, (sockaddr*)&from, &fromLen);
-	// If accept failed, log error and return
+
+	// If accept failed, report error and return
     if (INVALID_SOCKET == msgSocket) {
-		reportError("Error at accept()", 0);
+        reportError("Error at accept()", 0);
         return;
     }
-    std::cout << "Web Server: Client " << inet_ntoa(from.sin_addr) << ":" << ntohs(from.sin_port) << " is connected." << std::endl;
-    unsigned long flag = 1;
-	// Set the client socket to be non-blocking
-    ioctlsocket(msgSocket, FIONBIO, &flag);
 	// Add the new client to the clients map
-    clients.emplace(std::piecewise_construct,
-                   std::forward_as_tuple(msgSocket),
-                   std::forward_as_tuple(msgSocket));
+    if (addClient(msgSocket, from)) {
+        clients[msgSocket].setAwaitingRequest(); // FSM: Disconnected ? AwaitingRequest
+    }
 }
 
-void Server::receiveMessage(SOCKET socket) {
-    std::string tempBuff(recv_buffer_size_, '\0');
-    int bytesRecv = recv(socket, &tempBuff[0], static_cast<int>(tempBuff.size() - 1), 0);
+void Server::receiveMessage(Client& client) {
+
+	// If not in correct state, report error, abort client and return
+    if (client.state != ClientState::AwaitingRequest) {
+        reportError("receiveMessage called in invalid client state", false);
+        client.setAbort();
+        return;
+    }
+
+	// Receive data from the client
+    std::string tempBuff(RECVBUFF_SIZE, '\0');
+    int bytesRecv = recv(client.socket, &tempBuff[0], static_cast<int>(tempBuff.size() - 1), 0);
+
+	// If recv failed, report error, abort client and remove from map
     if (SOCKET_ERROR == bytesRecv) {
-        std::cout << "Web Server: Error at recv(): " << WSAGetLastError() << std::endl;
-        closesocket(socket);
-        clients.erase(socket);
+        reportError("Error at recv()", false);
+        client.setAbort();
+        closesocket(client.socket);
+        clients.erase(client.socket);
         return;
     }
+	// If connection was gracefully closed, mark client as finished and remove from map
     if (bytesRecv == 0) {
-        closesocket(socket);
-        clients.erase(socket);
+        client.setCompleted();
+        closesocket(client.socket);
+        clients.erase(client.socket);
         return;
     }
-    tempBuff.resize(bytesRecv); // keep only received bytes
-    Client& client = clients[socket];
-    client.last_active = time(nullptr);
-    client.in_buffer.append(tempBuff);
+
+    tempBuff.resize(bytesRecv);
+    client.setRequestBuffered(tempBuff); // FSM: AwaitingRequest ? RequestBuffered
     std::cout << "Web Server: Received: " << bytesRecv << " bytes of \"" << tempBuff << "\" message.\n";
-    if (is_http_request_complete(client.in_buffer) && !client.parsed_request) {
-        client.request_complete = true;
-        client.parsed_request = std::make_unique<Request>(client.in_buffer);
-        client.pending_response = std::make_unique<Response>();
-        client.pending_response->body = "Hello, World!";
-        client.pending_response->headers["Content-Type"] = "text/plain";
-        client.pending_response->headers["Content-Length"] = std::to_string(client.pending_response->body.size());
-        client.out_buffer = client.pending_response->to_string();
-        client.ready_to_send = true;
-    }
 }
 
-void Server::sendMessage(SOCKET socket) {
-    Client& client = clients[socket];
-    if (client.out_buffer.empty()) {
-        client.ready_to_send = false;
-        client.request_complete = false;
-        client.parsed_request.reset();
-        client.pending_response.reset();
+void Server::sendMessage(Client& client) {
+
+	// If not in correct state or buffer is empty, report error and return
+    if (client.state != ClientState::ResponseReady || client.out_buffer.empty()) {
+		reportError("sendMessage called in invalid state or empty buffer", false);
         return;
     }
-    int bytesSent = send(socket, client.out_buffer.c_str(), (int)client.out_buffer.size(), 0);
+
+    int bytesSent = send(client.socket, client.out_buffer.c_str(), (int)client.out_buffer.size(), 0);
+	// If send failed, report error, abort client and remove from map
     if (SOCKET_ERROR == bytesSent) {
-        std::cout << "Web Server: Error at send(): " << WSAGetLastError() << std::endl;
-        closesocket(socket);
-        clients.erase(socket);
+        reportError("Error at send()", false);
+        client.setAbort();
+        closesocket(client.socket);
+        clients.erase(client.socket);
         return;
     }
     std::cout << "Web Server: Sent: " << bytesSent << "/" << client.out_buffer.size() << " bytes of response.\n";
-    if (bytesSent < (int)client.out_buffer.size()) {
-        client.out_buffer = client.out_buffer.substr(bytesSent);
-        client.ready_to_send = true;
-    } else {
-        client.out_buffer.clear();
-        client.ready_to_send = false;
-        client.request_complete = false;
-        client.parsed_request.reset();
-        client.pending_response.reset();
-    }
+    client.setAwaitingRequest(); // Assumes complete HTTP request fits in one recv() call (simplified for assignment)
 }
 
 void Server::run() {
+	// If initialization failed, exit
     if (listenSocket == INVALID_SOCKET) {
-        std::cout << "Web Server: Initialization failed.\n";
+        reportError("Initialization failed", false);
         return;
     }
+	// Start listening for incoming connections
     if (!listen()) {
-        std::cout << "Web Server: Listen failed.\n";
+        reportError("Listen failed", true);
         return;
     }
+
     std::cout << "Server is running, waiting for connections...\n";
+	// Main server loop
     while (true) {
-        fd_set readfds, writefds;
-        FD_ZERO(&readfds);
-        FD_ZERO(&writefds);
-        FD_SET(listenSocket, &readfds);
-        for (auto& kv : clients) {
-            FD_SET(kv.first, &readfds);
-            if (kv.second.ready_to_send) {
-                FD_SET(kv.first, &writefds);
-            }
-        }
+        // Organize sockets into 'waiting to be read' and 'waiting to be written to' sets
+		fd_set readfds, writefds;
+		prepareFdSets(readfds, writefds); 
+
+		// Check sockets for events using select()
         int nfd = select(0, &readfds, &writefds, NULL, NULL);
+
+		// If select failed, report the error and exit
         if (nfd == SOCKET_ERROR) {
-            std::cout << "Web Server: Error at select(): " << WSAGetLastError() << std::endl;
+            reportError("Error at select()", false);
             return;
         }
+		// If new connection is pending, accept it
         if (FD_ISSET(listenSocket, &readfds)) {
             acceptConnection();
         }
-        std::vector<SOCKET> to_remove;
-        for (auto& kv : clients) {
-            SOCKET sock = kv.first;
-            Client& client = kv.second;
-            if (FD_ISSET(sock, &readfds)) {
-                receiveMessage(sock);
-            }
-            if (FD_ISSET(sock, &writefds) && client.ready_to_send) {
-                sendMessage(sock);
-            }
-            // Idle timeout
-            if (is_client_idle(client)) {
-                closesocket(sock);
-                to_remove.push_back(sock);
-            }
+		// Handle all client events (read/write/cleanup)
+        processClients(readfds, writefds);
+    }
+}
+
+// Prepare socket sets for select()
+void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
+    FD_ZERO(&readfds);
+    FD_ZERO(&writefds);
+    FD_SET(listenSocket, &readfds);
+    for (auto& kv : clients) {
+        if (kv.second.state == ClientState::AwaitingRequest) {
+            FD_SET(kv.first, &readfds);
         }
-        for (SOCKET sock : to_remove) {
-            clients.erase(sock);
+        if (kv.second.state == ClientState::ResponseReady) {
+            FD_SET(kv.first, &writefds);
         }
+    }
+}
+
+// Handle all client events (read/write/cleanup)
+void Server::processClients(fd_set& readfds, fd_set& writefds) {
+    std::vector<SOCKET> clientsToRemove;
+    for (auto& kv : clients) {
+
+        SOCKET sock = kv.first;
+        Client& client = kv.second;
+
+		// If socket is ready to read and client is awaiting request, receive message
+        if (FD_ISSET(sock, &readfds) && client.state == ClientState::AwaitingRequest) {
+            receiveMessage(client);
+        }
+		// If client has a buffered request, dispatch to process it
+        else if (client.state == ClientState::RequestBuffered) {
+			dispatch(client);
+        }
+		// If socket is ready to write and response is ready, send message
+        else if (FD_ISSET(sock, &writefds) && client.state == ClientState::ResponseReady) {
+            sendMessage(client);
+        }
+		// If client is idle for too long, terminate it
+        else if (client.isIdle()) {
+            client.setAbort();
+        }
+		// If client is completed or aborted, close socket and mark for removal
+        if (client.state == ClientState::Abort || client.state == ClientState::Completed) {
+            closesocket(sock);
+            clientsToRemove.push_back(sock);
+        }
+    }
+
+    for (SOCKET sock : clientsToRemove) {
+        clients.erase(sock);
     }
 }
