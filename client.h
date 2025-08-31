@@ -9,6 +9,24 @@
 #include <memory>
 #include "request.h"
 #include "response.h"
+#include <sstream>
+
+// Client state flow:
+//accept()
+//? AwaitingData
+//? recv()
+//? setRequestBuffered()
+//? RequestBuffered
+//? dispatch logic(manual or next step)
+//? build response
+//? Transmitting
+//? send()
+//? Finished
+//? Terminated
+//? closesocket() and remove from map
+// 
+// Error path:
+// recv() / send() ? SOCKET_ERROR ? Terminated
 
 enum class ClientState {
     Disconnected,   // No active client connection
@@ -22,21 +40,29 @@ enum class ClientState {
 
 class Client {
 public:
+
     SOCKET socket;                  // Client socket descriptor
+    std::string client_addr;        // Store client address
     std::string in_buffer;          // Raw incoming data buffer
     std::string out_buffer;         // Fully constructed HTTP response
-    time_t last_active;         // Used for idle timeout
+    time_t last_active;             // Used for idle timeout
 
     std::unique_ptr<Request> parsed_request = nullptr;   // Parsed HTTP request (optional caching)
     std::unique_ptr<Response> pending_response = nullptr; // Pending HTTP response (if used)
 
     ClientState state;
 
-    explicit Client(SOCKET s);
-    Client() : socket(INVALID_SOCKET) {}
-    ~Client() = default;
+    Client(SOCKET s, const sockaddr_in& addr); // Add constructor for socket and address
+    Client();
+    ~Client();
     Client(const Client&) = delete;
     Client& operator=(const Client&) = delete;
 
-    void bufferRequest(const std::string& data);
+    void setDisconnected();
+    void setAwaitingData();
+    void setRequestBuffered(const std::string& data);
+    void setResponseReady();
+    void setTransmitting();
+    void setFinished();
+    void setTerminated();
 };

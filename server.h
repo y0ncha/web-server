@@ -28,9 +28,12 @@ private:
     const std::size_t recv_buffer_size_;
     bool listen();
     void acceptConnection();
-    void receiveMessage(SOCKET socket);
-    void sendMessage(SOCKET socket);
+    void receiveMessage(Client& client);
+    void sendMessage(Client& client);
     void reportError(const std::string& msg, bool cleanupWSA);
-    bool addClient(SOCKET clientSocket);
+    bool addClient(SOCKET clientSocket, const sockaddr_in& addr);
+    void prepareFdSets(fd_set& readfds, fd_set& writefds);
+    void processClients(fd_set& readfds, fd_set& writefds);
+
 };
 
