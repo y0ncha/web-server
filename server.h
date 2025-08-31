@@ -22,10 +22,13 @@ public:
 private:
     std::string ip_;
     int port_;
-    SOCKET listenSocket = INVALID_SOCKET;
+
+    SOCKET listenSocket;
     sockaddr_in serverService_;
     std::map<SOCKET, Client> clients;
-    const std::size_t recv_buffer_size_;
+    const std::size_t RECVBUFF_SIZE;
+	const time_t CLIENT_TIMEOUT = 120; // 2 minutes
+
     bool listen();
     void acceptConnection();
     void receiveMessage(Client& client);
@@ -34,6 +37,6 @@ private:
     bool addClient(SOCKET clientSocket, const sockaddr_in& addr);
     void prepareFdSets(fd_set& readfds, fd_set& writefds);
     void processClients(fd_set& readfds, fd_set& writefds);
-
+    void dispatch(Client& client); // FSM: RequestBuffered ? ResponseReady
 };
 

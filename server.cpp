@@ -1,7 +1,7 @@
 #include "server.h"
 
 Server::Server(const std::string& ip, int port, std::size_t buffer_size)
-    : ip_(ip), port_(port), recv_buffer_size_(buffer_size)
+    : ip_(ip), port_(port), RECVBUFF_SIZE(buffer_size)
 {
 	// Initialize Winsock, if fails set listenSocket to INVALID_SOCKET and return
     WSAData wsaData;
@@ -88,27 +88,31 @@ bool Server::addClient(SOCKET clientSocket, const sockaddr_in& addr) {
     return true;
 }
 
+void Server::dispatch(Client& client) {
+    // FSM Step: RequestBuffered ? ResponseReady or Terminated
+    // Parse request and build response. For now, stub implementation.
+    // On success:
+    client.out_buffer = "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 2\r\n\r\nOK";
+    client.setResponseReady();
+    // On failure, call client.setTerminated();
+}
+
 void Server::acceptConnection() {
     sockaddr_in from;
     int fromLen = sizeof(from);
     SOCKET msgSocket = accept(listenSocket, (sockaddr*)&from, &fromLen);
-
-    // If accept failed, report the error and return
     if (INVALID_SOCKET == msgSocket) {
         reportError("Error at accept()", 0);
         return;
     }
-    // Add the new client to the clients map, if fails close the socket and return
     if (addClient(msgSocket, from)) {
-		clients[msgSocket].setAwaitingData(); // Start in AwaitingData state (Even though constructor does this too)
+        clients[msgSocket].setAwaitingRequest(); // FSM: Disconnected ? AwaitingRequest
     }
 }
 
 void Server::receiveMessage(Client& client) {
-    std::string tempBuff(recv_buffer_size_, '\0');
+    std::string tempBuff(RECVBUFF_SIZE, '\0');
     int bytesRecv = recv(client.socket, &tempBuff[0], static_cast<int>(tempBuff.size() - 1), 0);
-
-    // If recv failed, report the error, close the socket and remove the client
     if (SOCKET_ERROR == bytesRecv) {
         reportError("Error at recv()", false);
         client.setTerminated();
@@ -116,46 +120,33 @@ void Server::receiveMessage(Client& client) {
         clients.erase(client.socket);
         return;
     }
-    // If connection was closed by client, close the socket and remove the client
     if (bytesRecv == 0) {
-		client.setFinished();
+        client.setFinished();
         closesocket(client.socket);
         clients.erase(client.socket);
         return;
     }
     tempBuff.resize(bytesRecv);
-
-    client.setRequestBuffered(tempBuff); // Buffer the request at client, updates last_active and state
+    client.setRequestBuffered(tempBuff); // FSM: AwaitingRequest ? RequestBuffered
     std::cout << "Web Server: Received: " << bytesRecv << " bytes of \"" << tempBuff << "\" message.\n";
 }
 
 void Server::sendMessage(Client& client) {
 
-	// If not in Transmitting state or out_buffer is empty, nothing to send
-    if (client.state != ClientState::Transmitting || client.out_buffer.empty()) {
+    if (client.state != ClientState::ResponseReady || client.out_buffer.empty()) {
+		reportError("sendMessage called in invalid state or empty buffer", false);
         return;
     }
     int bytesSent = send(client.socket, client.out_buffer.c_str(), (int)client.out_buffer.size(), 0);
-
-	// If send failed, report the error, close the socket and remove the client
     if (SOCKET_ERROR == bytesSent) {
         reportError("Error at send()", false);
-		client.setTerminated();
+        client.setTerminated();
         closesocket(client.socket);
         clients.erase(client.socket);
         return;
     }
     std::cout << "Web Server: Sent: " << bytesSent << "/" << client.out_buffer.size() << " bytes of response.\n";
-
-	// If not all bytes were sent, keep the remaining in out
-    if (bytesSent < (int)client.out_buffer.size()) {
-        client.out_buffer = client.out_buffer.substr(bytesSent);
-		client.setTransmitting(); // Stay in Transmitting state
-    } 
-	// If all bytes were sent, clear out_buffer and reset state to Finished
-    else {
-		client.setFinished(); // Clear out_buffer and reset state to Finished
-    }
+    client.setAwaitingRequest(); // Assumes complete HTTP request fits in one recv() call (simplified for assignment)
 }
 
 void Server::run() {
@@ -193,24 +184,14 @@ void Server::run() {
 
 // Prepare socket sets for select()
 void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
-	FD_ZERO(&readfds); // Initialize read set
-	FD_ZERO(&writefds); // Initialize write set
-	FD_SET(listenSocket, &readfds); // Add listening socket to read set to monitor new connections
-
+    FD_ZERO(&readfds);
+    FD_ZERO(&writefds);
+    FD_SET(listenSocket, &readfds);
     for (auto& kv : clients) {
-        // --- INPUT SET (readfds) ---
-        // Sockets added here are monitored for incoming data.
-        // Client states that qualify:
-        //   - AwaitingData: waiting for a new request or more data from client
-        if (kv.second.state == ClientState::AwaitingData) {
+        if (kv.second.state == ClientState::AwaitingRequest) {
             FD_SET(kv.first, &readfds);
         }
-
-        // --- OUTPUT SET (writefds) ---
-        // Sockets added here are monitored for readiness to send data.
-        // Client states that qualify:
-        //   - Transmitting: server has a response ready to send to client
-        if (kv.second.state == ClientState::Transmitting) {
+        if (kv.second.state == ClientState::ResponseReady) {
             FD_SET(kv.first, &writefds);
         }
     }
@@ -218,34 +199,36 @@ void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
 
 // Handle all client events (read/write/cleanup)
 void Server::processClients(fd_set& readfds, fd_set& writefds) {
-
-	// List of sockets to remove after iteration to avoid modifying map during iteration
-    std::vector<SOCKET> removeList;
-
+    std::vector<SOCKET> clientsToRemove;
     for (auto& kv : clients) {
+
         SOCKET sock = kv.first;
         Client& client = kv.second;
-		// If socket is ready for reading, receive message
-        if (FD_ISSET(sock, &readfds)) {
+
+		// If socket is ready to read and client is awaiting request, receive message
+        if (FD_ISSET(sock, &readfds) && client.state == ClientState::AwaitingRequest) {
             receiveMessage(client);
         }
-		// If socket is ready for writing, send message
-        if (FD_ISSET(sock, &writefds)) {
+		// If client has a buffered request, dispatch to process it
+        else if (client.state == ClientState::RequestBuffered) {
+			dispatch(client);
+        }
+		// If socket is ready to write and response is ready, send message
+        else if (FD_ISSET(sock, &writefds) && client.state == ClientState::ResponseReady) {
             sendMessage(client);
         }
-		// If client is idle for too long, mark for termination
-        if (is_client_idle(client)) {
+		// If client is idle for too long, terminate it
+        else if (client.isIdle()) {
             client.setTerminated();
         }
-		// If client is in Terminated or Finished state, close socket and mark for removal
-        if (client.state == ClientState::Terminated || client.state == ClientState::Finished) {
+		// If client is completed or aborted, close socket and mark for removal
+        if (client.state == ClientState::Abort || client.state == ClientState::Completed) {
             closesocket(sock);
-            removeList.push_back(sock);
+            clientsToRemove.push_back(sock);
         }
     }
 
-	// Remove terminated clients from the map
-    for (SOCKET sock : removeList) {
+    for (SOCKET sock : clientsToRemove) {
         clients.erase(sock);
     }
 }

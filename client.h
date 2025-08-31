@@ -30,12 +30,11 @@
 
 enum class ClientState {
     Disconnected,   // No active client connection
-    AwaitingData,   // Receiving request data
-    RequestBuffered,// Full request buffered
-    ResponseReady,  // Response is ready
-    Transmitting,   // Response is being sent
-    Finished,       // Done, ready for next or close
-    Terminated      // Socket should be closed
+    AwaitingRequest,   // Waiting for a new request
+    RequestBuffered,   // Full request buffered
+    ResponseReady,     // Response is ready
+    Completed,          // Done, ready for next or close
+    Abort         // Socket should be closed
 };
 
 class Client {
@@ -59,10 +58,10 @@ public:
     Client& operator=(const Client&) = delete;
 
     void setDisconnected();
-    void setAwaitingData();
+    void setAwaitingRequest();
     void setRequestBuffered(const std::string& data);
     void setResponseReady();
-    void setTransmitting();
     void setFinished();
     void setTerminated();
+    bool isIdle(int timeout_sec = 120) const;
 };
