@@ -1,5 +1,6 @@
 #include "http_utils.h"
 
+// Returns Content-Length value from HTTP headers, or 0 if not found
 size_t get_content_length(const std::string& raw_headers) {
     size_t cl_pos = raw_headers.find("Content-Length:");
     if (cl_pos == std::string::npos) return 0;
@@ -25,4 +26,9 @@ bool is_request_complete(const std::string& buffer) {
         return true;
     }
     return false;
+}
+
+// A simple health check endpoint response
+Response health() {
+    return Response::ok();
 }

@@ -5,6 +5,7 @@
 
 class Response {
 public:
+
     int status_code = 200;
     std::string status_text = "OK";
     std::string version = "HTTP/1.1";
@@ -30,7 +31,7 @@ public:
         r.headers["Content-Type"] = "text/plain";
         return r;
     }
-    static Response ok(const std::string& body) {
+    static Response ok(const std::string& body = "") {
         Response r;
         r.status_code = 200;
         r.status_text = "OK";

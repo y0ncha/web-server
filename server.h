@@ -36,6 +36,7 @@ private:
     void reportError(const std::string& msg, bool cleanupWSA);
     bool addClient(SOCKET clientSocket, const sockaddr_in& addr);
     void prepareFdSets(fd_set& readfds, fd_set& writefds);
+	bool pollEvents(fd_set& readfds, fd_set& writefds);
     void processClients(fd_set& readfds, fd_set& writefds);
     void dispatch(Client& client); // FSM: RequestBuffered ? ResponseReady
 };
