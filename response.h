@@ -5,13 +5,14 @@
 
 class Response {
 public:
+
     int status_code = 200;
     std::string status_text = "OK";
     std::string version = "HTTP/1.1";
     std::map<std::string, std::string> headers;
     std::string body;
 
-    std::string to_string() const;
+    std::string toString() const;
 
     // Static shortcut helpers
     static Response not_found() {
@@ -30,7 +31,7 @@ public:
         r.headers["Content-Type"] = "text/plain";
         return r;
     }
-    static Response ok(const std::string& body) {
+    static Response ok(const std::string& body = "") {
         Response r;
         r.status_code = 200;
         r.status_text = "OK";

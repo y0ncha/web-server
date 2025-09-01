@@ -5,11 +5,15 @@ Client::Client(SOCKET s, const sockaddr_in& addr)
     std::ostringstream oss;
     oss << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port);
     client_addr = oss.str();
+    in_buffer.reserve(512);
+    out_buffer.reserve(512);
 }
 
 Client::Client()
     : socket(INVALID_SOCKET), last_active(0), state(ClientState::Disconnected) {
     client_addr = "";
+    in_buffer.reserve(512);
+	out_buffer.reserve(512);
 }
 
 Client::~Client() {}
@@ -34,9 +38,8 @@ void Client::setResponseReady() {
     std::cout << "Client [" << client_addr << "] state changed to ResponseReady\n";
 }
 void Client::setCompleted() {
+	in_buffer.clear();
     out_buffer.clear();
-    parsed_request.reset();
-    pending_response.reset();
     state = ClientState::Completed;
     std::cout << "Client [" << client_addr << "] state changed to Completed\n";
 }

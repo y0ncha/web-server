@@ -3,7 +3,7 @@
 #include <csignal>
 
 static constexpr const char* IP = "127.0.0.1";
-static constexpr int PORT = 27015;
+static constexpr int PORT = 8080;
 
 int main() {
     Server server(IP, PORT);

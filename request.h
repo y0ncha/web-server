@@ -12,6 +12,6 @@ public:
     std::string body;
 
     Request(const std::string& raw);
-    std::string get_query_param(const std::string& key) const;
+    std::string getQparams(const std::string& key) const;
 };
 

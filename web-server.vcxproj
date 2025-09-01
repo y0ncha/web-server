@@ -179,6 +179,7 @@
     <ClCompile Include="..\..\..\Desktop\TCP_server_Blocking.cpp" />
     <ClCompile Include="..\..\..\Desktop\TCP_server_NonBlocking.cpp" />
     <ClCompile Include="client.cpp" />
+    <ClCompile Include="http_utils.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="request.cpp" />
     <ClCompile Include="response.cpp" />

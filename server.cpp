@@ -30,6 +30,12 @@ Server::Server(const std::string& ip, int port, std::size_t buffer_size)
 }
 
 Server::~Server() {
+	// Clean up all client connections (if any)
+    for (auto& kv : clients) {
+        closesocket(kv.first); // Ensure socket is closed
+		kv.second.setAbort(); // Mark client as aborted
+    }
+    clients.clear(); // Remove all clients
 
     // Close the listening socket
     if (listenSocket != INVALID_SOCKET) {
@@ -85,16 +91,20 @@ bool Server::addClient(SOCKET clientSocket, const sockaddr_in& addr) {
         closesocket(clientSocket);
         return false;
     }
+	std::cout << "Client [" << result.first->second.client_addr << "] connected.\n";
     return true;
 }
 
 void Server::dispatch(Client& client) {
-    // FSM Step: RequestBuffered ? ResponseReady or Terminated
-    // Parse request and build response. For now, stub implementation.
-    // On success:
-    client.out_buffer = "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 2\r\n\r\nOK";
-    client.setResponseReady();
-    // On failure, call client.setTerminated();
+	Request req(client.in_buffer);
+	Response res = Response::bad_request();
+
+    if (req.method == "GET") {
+        if (req.path == "/health") {
+            res = health();
+        }
+    }
+	client.out_buffer = res.toString();
 }
 
 void Server::acceptConnection() {
@@ -111,7 +121,7 @@ void Server::acceptConnection() {
     }
 	// Add the new client to the clients map
     if (addClient(msgSocket, from)) {
-        clients[msgSocket].setAwaitingRequest(); // FSM: Disconnected ? AwaitingRequest
+        clients[msgSocket].setAwaitingRequest(); // FSM: Disconnected -> AwaitingRequest
     }
 }
 
@@ -143,10 +153,9 @@ void Server::receiveMessage(Client& client) {
         clients.erase(client.socket);
         return;
     }
-
     tempBuff.resize(bytesRecv);
     client.setRequestBuffered(tempBuff); // FSM: AwaitingRequest ? RequestBuffered
-    std::cout << "Web Server: Received: " << bytesRecv << " bytes of \"" << tempBuff << "\" message.\n";
+    std::cout << "Web Server: Received: " << bytesRecv << " bytes :\n" << tempBuff;
 }
 
 void Server::sendMessage(Client& client) {
@@ -171,6 +180,7 @@ void Server::sendMessage(Client& client) {
 }
 
 void Server::run() {
+
 	// If initialization failed, exit
     if (listenSocket == INVALID_SOCKET) {
         reportError("Initialization failed", false);
@@ -185,32 +195,32 @@ void Server::run() {
     std::cout << "Server is running, waiting for connections...\n";
 	// Main server loop
     while (true) {
-        // Organize sockets into 'waiting to be read' and 'waiting to be written to' sets
+
+		// Prepare socket sets and poll for events
 		fd_set readfds, writefds;
-		prepareFdSets(readfds, writefds); 
-
-		// Check sockets for events using select()
-        int nfd = select(0, &readfds, &writefds, NULL, NULL);
-
-		// If select failed, report the error and exit
-        if (nfd == SOCKET_ERROR) {
-            reportError("Error at select()", false);
+		if (!pollEvents(readfds, writefds)) {
+            reportError("Polling events failed", true);
             return;
-        }
+		}
+
 		// If new connection is pending, accept it
         if (FD_ISSET(listenSocket, &readfds)) {
             acceptConnection();
         }
-		// Handle all client events (read/write/cleanup)
+		// Process all client events (read/write/cleanup)
         processClients(readfds, writefds);
     }
 }
 
 // Prepare socket sets for select()
 void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
+
+	// Clear the sets and add the listening socket
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
     FD_SET(listenSocket, &readfds);
+
+	// Add client sockets based on their state
     for (auto& kv : clients) {
         if (kv.second.state == ClientState::AwaitingRequest) {
             FD_SET(kv.first, &readfds);
@@ -221,9 +231,23 @@ void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
     }
 }
 
+// Poll sockets for events using select()
+bool Server::pollEvents(fd_set& readfds, fd_set& writefds) {
+
+	prepareFdSets(readfds, writefds);
+    int nfd = select(0, &readfds, &writefds, NULL, NULL);
+
+    if (nfd == SOCKET_ERROR) {
+        reportError("Error at select()", false);
+        return false;
+    }
+    return true;
+}
+
 // Handle all client events (read/write/cleanup)
 void Server::processClients(fd_set& readfds, fd_set& writefds) {
     std::vector<SOCKET> clientsToRemove;
+
     for (auto& kv : clients) {
 
         SOCKET sock = kv.first;
@@ -251,7 +275,7 @@ void Server::processClients(fd_set& readfds, fd_set& writefds) {
             clientsToRemove.push_back(sock);
         }
     }
-
+	// Remove terminated clients from the map
     for (SOCKET sock : clientsToRemove) {
         clients.erase(sock);
     }

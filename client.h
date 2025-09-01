@@ -44,10 +44,7 @@ public:
     std::string client_addr;        // Store client address
     std::string in_buffer;          // Raw incoming data buffer
     std::string out_buffer;         // Fully constructed HTTP response
-    time_t last_active;             // Used for idle timeout
-
-    std::unique_ptr<Request> parsed_request = nullptr;   // Parsed HTTP request (optional caching)
-    std::unique_ptr<Response> pending_response = nullptr; // Pending HTTP response (if used)
+    time_t last_active;             // Used for idle timeout tracking
 
     ClientState state;
 
