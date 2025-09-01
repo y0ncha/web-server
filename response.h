@@ -11,7 +11,7 @@ public:
     std::map<std::string, std::string> headers;
     std::string body;
 
-    std::string to_string() const;
+    std::string toString() const;
 
     // Static shortcut helpers
     static Response not_found() {

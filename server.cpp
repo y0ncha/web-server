@@ -30,6 +30,12 @@ Server::Server(const std::string& ip, int port, std::size_t buffer_size)
 }
 
 Server::~Server() {
+	// Clean up all client connections (if any)
+    for (auto& kv : clients) {
+        closesocket(kv.first); // Ensure socket is closed
+		kv.second.setAbort(); // Mark client as aborted
+    }
+    clients.clear(); // Remove all clients
 
     // Close the listening socket
     if (listenSocket != INVALID_SOCKET) {
@@ -143,7 +149,6 @@ void Server::receiveMessage(Client& client) {
         clients.erase(client.socket);
         return;
     }
-
     tempBuff.resize(bytesRecv);
     client.setRequestBuffered(tempBuff); // FSM: AwaitingRequest ? RequestBuffered
     std::cout << "Web Server: Received: " << bytesRecv << " bytes of \"" << tempBuff << "\" message.\n";
@@ -185,6 +190,7 @@ void Server::run() {
     std::cout << "Server is running, waiting for connections...\n";
 	// Main server loop
     while (true) {
+
         // Organize sockets into 'waiting to be read' and 'waiting to be written to' sets
 		fd_set readfds, writefds;
 		prepareFdSets(readfds, writefds); 
@@ -201,16 +207,20 @@ void Server::run() {
         if (FD_ISSET(listenSocket, &readfds)) {
             acceptConnection();
         }
-		// Handle all client events (read/write/cleanup)
+		// Process all client events (read/write/cleanup)
         processClients(readfds, writefds);
     }
 }
 
 // Prepare socket sets for select()
 void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
+
+	// Clear the sets and add the listening socket
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
     FD_SET(listenSocket, &readfds);
+
+	// Add client sockets based on their state
     for (auto& kv : clients) {
         if (kv.second.state == ClientState::AwaitingRequest) {
             FD_SET(kv.first, &readfds);
@@ -224,6 +234,7 @@ void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
 // Handle all client events (read/write/cleanup)
 void Server::processClients(fd_set& readfds, fd_set& writefds) {
     std::vector<SOCKET> clientsToRemove;
+
     for (auto& kv : clients) {
 
         SOCKET sock = kv.first;
@@ -251,7 +262,7 @@ void Server::processClients(fd_set& readfds, fd_set& writefds) {
             clientsToRemove.push_back(sock);
         }
     }
-
+	// Remove terminated clients from the map
     for (SOCKET sock : clientsToRemove) {
         clients.erase(sock);
     }

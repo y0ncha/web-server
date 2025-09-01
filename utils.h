@@ -1,9 +1,12 @@
 #pragma once
 #include <algorithm>
 #include <string>
+#include <cctype>
 
-// Returns Content-Length value from HTTP headers, or 0 if not found
-size_t get_content_length(const std::string& raw_headers);
-
-// Returns true if the HTTP request is complete (headers and body)
-bool is_request_complete(const std::string& buffer);
+inline std::string trim(const std::string& s) {
+    auto start = s.begin();
+    while (start != s.end() && std::isspace(*start)) ++start;
+    auto end = s.end();
+    do { --end; } while (end != start && std::isspace(*end));
+    return std::string(start, end + 1);
+}
