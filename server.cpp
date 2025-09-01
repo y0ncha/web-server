@@ -155,7 +155,7 @@ void Server::receiveMessage(Client& client) {
     }
     tempBuff.resize(bytesRecv);
     client.setRequestBuffered(tempBuff); // FSM: AwaitingRequest ? RequestBuffered
-    std::cout << "Web Server: Received: " << bytesRecv << " bytes of \"" << tempBuff << "\" message.\n";
+    std::cout << "Web Server: Received: " << bytesRecv << " bytes :\n" << tempBuff;
 }
 
 void Server::sendMessage(Client& client) {
