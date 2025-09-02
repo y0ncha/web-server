@@ -50,13 +50,13 @@ Response handle_html_file(const Request& req) {
     std::string file_path = resolve_file_path(req.path, lang);
     if (file_path.empty()) {
         std::ostringstream ss;
-        ss << "File not found for path: " << req.path;
+        ss << "File not found for path " << req.path;
         return handle_not_found(ss.str());
     }
     std::ifstream file(file_path);
     if (!file.is_open()) {
         std::ostringstream ss;
-        ss << "File could not be opened: " << file_path;
+        ss << "File could not be opened " << file_path;
         return handle_not_found(ss.str());
     }
     std::ostringstream ss;
@@ -68,9 +68,20 @@ Response handle_html_file(const Request& req) {
 
 Response handle_not_found(const std::string& error) {
     Response res = Response::not_found();
-    res.body += " : ";
-	res.body += error;
+    if (!error.empty()) {
+        res.body += " : ";
+        res.body += error;
+    }
     return res;
+}
+
+Response handle_bad_request(const std::string& error) {
+    Response res = Response::bad_request();
+    if (!error.empty()) {
+        res.body += " : ";
+        res.body += error;
+    }
+	return res;
 }
 
 size_t get_content_length(const std::string& raw_headers) {

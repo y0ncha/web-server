@@ -107,6 +107,7 @@ void Server::dispatch(Client& client) {
     Response res;
 
     if (req.method == "GET") {
+
 		if (req.path == "/health") { // Static health check response
             res = handle_health();
         } 
@@ -118,7 +119,7 @@ void Server::dispatch(Client& client) {
         }
     } 
     else {
-        res = handle_not_found();
+		res = handle_bad_request("Unsupported HTTP method");
     }
     client.out_buffer = res.toString();
 	client.setResponseReady(); // FSM: RequestBuffered ? ResponseReady

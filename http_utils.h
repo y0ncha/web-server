@@ -16,6 +16,8 @@ Response handle_echo(const Request& req);
 Response handle_html_file(const Request& req);
 // Fallback handler for 404 Not Found
 Response handle_not_found(const std::string& error = "");
+// Fallback handler for 400 Bad Request
+Response handle_bad_request(const std::string& error = "");
 
 // Helper: resolve file path for static HTML serving
 std::string resolve_file_path(const std::string& path, const std::string& lang);
