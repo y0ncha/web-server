@@ -146,14 +146,22 @@ void Server::receiveMessage(Client& client) {
         clients.erase(client.socket);
         return;
     }
-	// If connection was gracefully closed, mark client as finished and remove from map
+	// If connection was gracefully closed, mark client as complete and remove from map
     if (bytesRecv == 0) {
         client.setCompleted();
         closesocket(client.socket);
         clients.erase(client.socket);
         return;
     }
-    tempBuff.resize(bytesRecv);
+	tempBuff.resize(bytesRecv);
+	// If incomplete request, keep buffering
+    if (!is_request_complete(tempBuff)) {
+        client.last_active = std::time(nullptr); // Reset timeout
+        client.in_buffer += tempBuff.substr(0, bytesRecv);
+        std::cout << "Web Server: Received " << bytesRecv << " bytes (partial). Total buffered: "
+            << client.in_buffer.size() << " bytes.\n";
+		return;
+    } 
     client.setRequestBuffered(tempBuff); // FSM: AwaitingRequest ? RequestBuffered
     std::cout << "Web Server: Received: " << bytesRecv << " bytes :\n" << tempBuff;
 }
@@ -175,8 +183,14 @@ void Server::sendMessage(Client& client) {
         clients.erase(client.socket);
         return;
     }
+    if (bytesSent < client.out_buffer.size()) {
+        client.out_buffer = client.out_buffer.substr(bytesSent); // Remove sent part
+        std::cout << "Web Server: Sent " << bytesSent << " bytes (partial). Remaining: "
+            << client.out_buffer.size() - bytesSent << " bytes.\n";
+		return; // Wait for next opportunity to send remaining data
+    }
     std::cout << "Web Server: Sent: " << bytesSent << "/" << client.out_buffer.size() << " bytes of response.\n";
-    client.setAwaitingRequest(); // Assumes complete HTTP request fits in one recv() call (simplified for assignment)
+    client.setAwaitingRequest();
 }
 
 void Server::run() {
