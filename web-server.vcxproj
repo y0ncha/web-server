@@ -194,6 +194,15 @@
     <ClInclude Include="server.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="about.fr.html" />
+    <None Include="about.he.html" />
+    <None Include="about.html" />
+    <None Include="index.fr.html" />
+    <None Include="index.he.html" />
+    <None Include="index.html" />
+    <None Include="tests.json" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

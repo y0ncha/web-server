@@ -23,19 +23,19 @@ public:
         r.headers["Content-Type"] = "text/plain";
         return r;
     }
-    static Response bad_request() {
+    static Response bad_request(const std::string& body = "400 Bad Request") {
         Response r;
         r.status_code = 400;
         r.status_text = "Bad Request";
-        r.body = "400 Bad Request";
+        r.body = body;
         r.headers["Content-Type"] = "text/plain";
         return r;
     }
-    static Response ok() {
+    static Response ok(const std::string& body = "OK") {
         Response r;
         r.status_code = 200;
         r.status_text = "OK";
-        r.body = "OK";
+        r.body = body;
         r.headers["Content-Type"] = "text/plain";
         return r;
     }

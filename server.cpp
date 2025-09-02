@@ -103,8 +103,12 @@ void Server::dispatch(Client& client) {
     client.keep_alive = req.headers.count("Connection") && (req.headers.at("Connection") == "keep-alive" || req.version == "HTTP/1.1");
 
     if (req.method == "GET") {
+
         if (req.path == "/health") {
             res = health();
+        } 
+        else if (req.path == "/echo") {
+			res = echo(req.getQparams("msg"));
         }
     }
 	client.out_buffer = res.toString();

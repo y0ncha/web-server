@@ -32,3 +32,8 @@ bool is_request_complete(const std::string& buffer) {
 Response health() {
     return Response::ok();
 }
+
+// An echo endpoint that returns the 'msg' query parameter
+Response echo(const std::string& msg) {
+    return msg.empty() ? Response::bad_request("Missing 'msg' query parameter") : Response::ok(msg);
+}

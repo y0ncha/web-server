@@ -1,0 +1,60 @@
+{
+  "info": {
+    "_postman_id": "a1111111-b222-cccc-d333-444444444444",
+    "name": "Custom Web Server Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/health",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "health" ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Echo with message",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/echo?msg=HelloWorld",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "echo" ],
+          "query": [
+            {
+              "key": "msg",
+              "value": "HelloWorld"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Echo without message (should fail)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/echo",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "echo" ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

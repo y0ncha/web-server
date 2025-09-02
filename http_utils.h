@@ -11,3 +11,5 @@ size_t get_content_length(const std::string& raw_headers);
 bool is_request_complete(const std::string& buffer);
 
 Response health();
+
+Response echo(const std::string& msg);

@@ -30,10 +30,63 @@
     <ClCompile Include="..\..\..\Desktop\TCP_server_NonBlocking.cpp">
       <Filter>Documents</Filter>
     </ClCompile>
+    <ClCompile Include="client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="http_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="response.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="response.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tests.json">
+      <Filter>Documents</Filter>
+    </None>
+    <None Include="index.html">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="index.he.html">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="index.fr.html">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="about.html">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="about.he.html">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="about.fr.html">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
