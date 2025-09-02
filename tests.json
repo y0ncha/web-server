@@ -1,60 +1,151 @@
 {
   "info": {
-    "_postman_id": "a1111111-b222-cccc-d333-444444444444",
-    "name": "Custom Web Server Tests",
+    "name": "Web Server Tests",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Health Check",
+      "name": "GET / (default index.html)",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/health",
+          "raw": "http://localhost:8080/",
           "protocol": "http",
           "host": [ "localhost" ],
           "port": "8080",
-          "path": [ "health" ]
+          "path": [ "" ],
+          "query": []
         }
       },
-      "response": []
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Content-Type is text/html\", function () {",
+              "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
+              "});"
+            ]
+          }
+        }
+      ]
     },
     {
-      "name": "Echo with message",
+      "name": "GET /?lang=he",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/echo?msg=HelloWorld",
+          "raw": "http://localhost:8080/?lang=he",
           "protocol": "http",
           "host": [ "localhost" ],
           "port": "8080",
-          "path": [ "echo" ],
+          "path": [ "" ],
           "query": [
             {
-              "key": "msg",
-              "value": "HelloWorld"
+              "key": "lang",
+              "value": "he"
             }
           ]
         }
       },
-      "response": []
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Content-Type is text/html\", function () {",
+              "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
+              "});"
+            ]
+          }
+        }
+      ]
     },
     {
-      "name": "Echo without message (should fail)",
+      "name": "GET /?lang=en",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/echo",
+          "raw": "http://localhost:8080/?lang=en",
           "protocol": "http",
           "host": [ "localhost" ],
           "port": "8080",
-          "path": [ "echo" ]
+          "path": [ "" ],
+          "query": [
+            {
+              "key": "lang",
+              "value": "en"
+            }
+          ]
         }
       },
-      "response": []
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Content-Type is text/html\", function () {",
+              "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /?lang=fr",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/?lang=fr",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "" ],
+          "query": [
+            {
+              "key": "lang",
+              "value": "fr"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Content-Type is text/html\", function () {",
+              "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
+              "});"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

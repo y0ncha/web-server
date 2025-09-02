@@ -107,14 +107,14 @@ void Server::dispatch(Client& client) {
     Response res;
 
     if (req.method == "GET") {
-        if (req.path == "/health") {
+		if (req.path == "/health") { // Static health check response
             res = handle_health();
         } 
-        else if (req.path == "/echo") {
+		else if (req.path == "/echo") { // Dynamic echo response
 			res = handle_echo(req);
         }
-        else if (req.path == "/") {
-            res = handle_root(req);
+		else { // HTML file request
+            res = handle_html_file(req);
         }
     } 
     else {
@@ -155,17 +155,15 @@ void Server::receiveMessage(Client& client) {
 
 	// If recv failed, report error, abort client and remove from map
     if (SOCKET_ERROR == bytesRecv) {
-        reportError("Error at recv()", false);
         client.setAborted();
+        reportError("Error at recv()", false);
         closesocket(client.socket);
-        clients.erase(client.socket);
         return;
     }
 	// If connection was gracefully closed, mark client as complete and remove from map
     if (bytesRecv == 0) {
         client.setCompleted();
         closesocket(client.socket);
-        clients.erase(client.socket);
         return;
     }
 
@@ -195,10 +193,9 @@ void Server::sendMessage(Client& client) {
     int bytesSent = send(client.socket, client.out_buffer.c_str(), (int)client.out_buffer.size(), 0);
 	// If send failed, report error, abort client and remove from map
     if (SOCKET_ERROR == bytesSent) {
-        reportError("Error at send()", false);
         client.setAborted();
+        reportError("Error at send()", false);
         closesocket(client.socket);
-        clients.erase(client.socket);
         return;
     }
     if (bytesSent < client.out_buffer.size()) {
@@ -287,8 +284,16 @@ void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
 // Poll sockets for events using select()
 bool Server::pollEvents(fd_set& readfds, fd_set& writefds) {
 
+	// Optional timeout for select (can be NULL for blocking)
+    //timeval timeout;
+    //timeout.tv_sec = 1; // 1 second
+    //timeout.tv_usec = 0;
+    //prepareFdSets(readfds, writefds);
+    //int nfd = select(0, &readfds, &writefds, NULL, &timeout);
+
 	prepareFdSets(readfds, writefds);
     int nfd = select(0, &readfds, &writefds, NULL, NULL);
+
 
     if (nfd == SOCKET_ERROR) {
         reportError("Error at select()", false);
