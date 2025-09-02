@@ -12,13 +12,12 @@ Response handle_health() {
 
 Response handle_echo(const Request& req) {
     std::string msg = req.getQparams("msg");
+	Response res;
     if (msg.empty()) {
-        Response res = Response::bad_request();
-        res.body = "Missing 'msg' query parameter";
-        res.headers["Content-Type"] = "text/plain";
+		res = handle_bad_request("Missing 'msg' query parameter");
         return res;
     }
-    Response res = Response::ok(msg);
+    res = Response::ok(msg);
     res.headers["Content-Type"] = "text/plain";
     return res;
 }
