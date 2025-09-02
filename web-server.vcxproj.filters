@@ -70,23 +70,5 @@
     <None Include="tests.json">
       <Filter>Documents</Filter>
     </None>
-    <None Include="index.html">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="index.he.html">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="index.fr.html">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="about.html">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="about.he.html">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="about.fr.html">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
 </Project>
