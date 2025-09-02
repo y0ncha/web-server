@@ -11,30 +11,16 @@
 #include "response.h"
 #include <sstream>
 
-// Client state flow:
-//accept()
-//? AwaitingData
-//? recv()
-//? setRequestBuffered()
-//? RequestBuffered
-//? dispatch logic(manual or next step)
-//? build response
-//? Transmitting
-//? send()
-//? Finished
-//? Terminated
-//? closesocket() and remove from map
-// 
-// Error path:
-// recv() / send() ? SOCKET_ERROR ? Terminated
+static constexpr size_t BUFF_SIZE = 1024; // 4KB max buffer size
 
+// Client states for the FSM
 enum class ClientState {
     Disconnected,   // No active client connection
     AwaitingRequest,   // Waiting for a new request
     RequestBuffered,   // Full request buffered
     ResponseReady,     // Response is ready
     Completed,          // Done, ready for next or close
-    Abort         // Socket should be closed
+    Aborted         // Socket should be closed
 };
 
 class Client {
@@ -45,6 +31,7 @@ public:
     std::string in_buffer;          // Raw incoming data buffer
     std::string out_buffer;         // Fully constructed HTTP response
     time_t last_active;             // Used for idle timeout tracking
+	bool keep_alive;                // Connection: keep-alive or close
 
     ClientState state;
 
@@ -56,9 +43,11 @@ public:
 
     void setDisconnected();
     void setAwaitingRequest();
-    void setRequestBuffered(const std::string& data);
+    void setRequestBuffered();
     void setResponseReady();
     void setCompleted();
-    void setAbort();
+    void setAborted();
+
     bool isIdle(int timeout_sec = 120) const;
+    void bufferRequest(const std::string& data);
 };

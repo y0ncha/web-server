@@ -16,7 +16,7 @@
 
 class Server {
 public:
-    Server(const std::string& ip, int port, std::size_t buffer_size = 512);
+    Server(const std::string& ip, int port, std::size_t buffer_size = 1024);
     ~Server();
     void run();
 private:
@@ -24,9 +24,8 @@ private:
     int port_;
 
     SOCKET listenSocket;
-    sockaddr_in serverService_;
     std::map<SOCKET, Client> clients;
-    const std::size_t RECVBUFF_SIZE;
+	const std::size_t BUFF_SIZE; // Max size of the buffer
 	const time_t CLIENT_TIMEOUT = 120; // 2 minutes
 
     bool listen();
@@ -37,7 +36,7 @@ private:
     bool addClient(SOCKET clientSocket, const sockaddr_in& addr);
     void prepareFdSets(fd_set& readfds, fd_set& writefds);
 	bool pollEvents(fd_set& readfds, fd_set& writefds);
-    void processClients(fd_set& readfds, fd_set& writefds);
+    void processClient(Client& client, fd_set& readfds, fd_set& writefds);
     void dispatch(Client& client); // FSM: RequestBuffered ? ResponseReady
 };
 

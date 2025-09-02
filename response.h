@@ -31,11 +31,11 @@ public:
         r.headers["Content-Type"] = "text/plain";
         return r;
     }
-    static Response ok(const std::string& body = "") {
+    static Response ok() {
         Response r;
         r.status_code = 200;
         r.status_text = "OK";
-        r.body = body;
+        r.body = "OK";
         r.headers["Content-Type"] = "text/plain";
         return r;
     }
