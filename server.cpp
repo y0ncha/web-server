@@ -105,6 +105,7 @@ void Server::dispatch(Client& client) {
         }
     }
 	client.out_buffer = res.toString();
+	client.setResponseReady(); // FSM: RequestBuffered -> ResponseReady
 }
 
 void Server::acceptConnection() {
@@ -154,8 +155,16 @@ void Server::receiveMessage(Client& client) {
         return;
     }
     tempBuff.resize(bytesRecv);
-    client.setRequestBuffered(tempBuff); // FSM: AwaitingRequest ? RequestBuffered
+    
+    // Append received data to the input buffer
+    client.in_buffer.append(tempBuff);
     std::cout << "Web Server: Received: " << bytesRecv << " bytes :\n" << tempBuff;
+    
+    // Only set RequestBuffered state if we have a complete HTTP request
+    if (is_request_complete(client.in_buffer)) {
+        client.state = ClientState::RequestBuffered;
+        std::cout << "Client [" << client.client_addr << "] state changed to RequestBuffered\n";
+    }
 }
 
 void Server::sendMessage(Client& client) {
@@ -257,8 +266,8 @@ void Server::processClients(fd_set& readfds, fd_set& writefds) {
         if (FD_ISSET(sock, &readfds) && client.state == ClientState::AwaitingRequest) {
             receiveMessage(client);
         }
-		// If client has a buffered request, dispatch to process it
-        else if (client.state == ClientState::RequestBuffered) {
+		// If client has a buffered request, dispatch to process it (can happen in same iteration as receive)
+        if (client.state == ClientState::RequestBuffered) {
 			dispatch(client);
         }
 		// If socket is ready to write and response is ready, send message
