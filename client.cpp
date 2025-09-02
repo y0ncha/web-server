@@ -2,7 +2,7 @@
 #include <ctime>
 
 Client::Client(SOCKET s, const sockaddr_in& addr)
-    : socket(s), last_active(0), state(ClientState::AwaitingRequest) {
+    : socket(s), last_active(0),keep_alive(true), state(ClientState::AwaitingRequest) {
     std::ostringstream oss;
     oss << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port);
     client_addr = oss.str();
@@ -11,7 +11,7 @@ Client::Client(SOCKET s, const sockaddr_in& addr)
 }
 
 Client::Client()
-    : socket(INVALID_SOCKET), last_active(0), state(ClientState::Disconnected) {
+    : socket(INVALID_SOCKET), last_active(0),keep_alive(true), state(ClientState::Disconnected) {
     client_addr = "";
     in_buffer.reserve(BUFF_SIZE);
 	out_buffer.reserve(BUFF_SIZE);

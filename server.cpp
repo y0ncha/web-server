@@ -1,4 +1,8 @@
 #include "server.h"
+#include "http_utils.h"
+#include <algorithm> // For std::transform
+#include <fstream> // For std::ifstream
+#include <sstream> // For std::ostringstream
 
 Server::Server(const std::string& ip, int port, std::size_t buffer_size)
     : ip_(ip), port_(port), BUFF_SIZE(buffer_size)
@@ -96,22 +100,27 @@ bool Server::addClient(SOCKET clientSocket, const sockaddr_in& addr) {
 
 void Server::dispatch(Client& client) {
 
-	Request req(client.in_buffer);
-    Response res = Response::bad_request();
+	Request req(client.in_buffer); // Parse the buffered request
+    client.in_buffer.clear(); // Clear input buffer after parsing
+    client.keep_alive = is_keep_alive(req); // Determine if connection should be kept alive (defaulted to keep-alive)
 
-	client.in_buffer.clear(); // Clear input buffer after parsing
-    client.keep_alive = req.headers.count("Connection") && (req.headers.at("Connection") == "keep-alive" || req.version == "HTTP/1.1");
+    Response res;
 
     if (req.method == "GET") {
-
         if (req.path == "/health") {
-            res = health();
+            res = handle_health();
         } 
         else if (req.path == "/echo") {
-			res = echo(req.getQparams("msg"));
+			res = handle_echo(req);
         }
+        else if (req.path == "/") {
+            res = handle_root(req);
+        }
+    } 
+    else {
+        res = handle_not_found();
     }
-	client.out_buffer = res.toString();
+    client.out_buffer = res.toString();
 	client.setResponseReady(); // FSM: RequestBuffered ? ResponseReady
 }
 

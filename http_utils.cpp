@@ -1,4 +1,7 @@
 #include "http_utils.h"
+#include <fstream>
+#include <sstream>
+#include <algorithm>
 
 // Returns Content-Length value from HTTP headers, or 0 if not found
 size_t get_content_length(const std::string& raw_headers) {
@@ -28,12 +31,66 @@ bool is_request_complete(const std::string& buffer) {
     return false;
 }
 
+bool is_keep_alive(const Request& req) {
+
+    auto conn_it = req.headers.find("Connection");
+    if (conn_it != req.headers.end()) {
+        std::string conn_val = conn_it->second;
+        std::transform(conn_val.begin(), conn_val.end(), conn_val.begin(), ::tolower);
+        if (conn_val == "keep-alive") return true;
+        if (conn_val == "close") return false;
+    }
+    // Default to HTTP/1.1 keep-alive, HTTP/1.0 close
+    return req.version == "HTTP/1.1";
+}
+
 // A simple health check endpoint response
-Response health() {
+Response handle_health() {
     return Response::ok();
 }
 
 // An echo endpoint that returns the 'msg' query parameter
-Response echo(const std::string& msg) {
-    return msg.empty() ? Response::bad_request("Missing 'msg' query parameter") : Response::ok(msg);
+Response handle_echo(const Request& req) {
+    std::string msg = req.getQparams("msg");
+    if (msg.empty()) {
+        Response res = Response::bad_request();
+        res.body = "Missing 'msg' query parameter";
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+    Response res = Response::ok(msg);
+    res.headers["Content-Type"] = "text/plain";
+    return res;
+}
+
+std::string getLocalizedIndexPath(const std::string& lang) {
+    if (lang == "he") return "C:\\temp\\index.he.html";
+    if (lang == "en") return "C:\\temp\\index.en.html";
+    if (lang == "fr") return "C:\\temp\\index.fr.html";
+    return "C:\\temp\\index.html";
+}
+
+Response handle_root(const Request& req) {
+    std::string lang = req.getQparams("lang");
+
+    std::string file_path = getLocalizedIndexPath(lang);
+    std::ifstream file(file_path);
+
+    if (!file) {
+        Response res = Response::not_found();
+        res.body += ": File missing";  // optional
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+
+    std::ostringstream ss;
+    ss << file.rdbuf();
+
+    Response res = Response::ok(ss.str());
+    res.headers["Content-Type"] = "text/html";
+    return res;
+}
+
+Response handle_not_found() {
+    return Response::not_found();
 }
