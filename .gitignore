@@ -55,6 +55,10 @@ nunit-*.xml
 [Rr]eleasePS/
 dlldata.c
 
+# MinGW cross-compilation artifacts
+*.exe
+*.o
+
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
 

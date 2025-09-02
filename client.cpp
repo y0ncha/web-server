@@ -1,4 +1,5 @@
 #include "client.h"
+#include <ctime>
 
 Client::Client(SOCKET s, const sockaddr_in& addr)
     : socket(s), last_active(0), state(ClientState::AwaitingRequest) {
