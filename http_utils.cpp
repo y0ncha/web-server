@@ -7,9 +7,7 @@
  * @return HTTP response
  */
 Response handleGet(const Request& request) {
-    if (request.path == "/health") {
-        return health();
-    }
+ 
     std::string lang = request.getQparams("lang");
     std::string filePath = resolveFilePath(request.path, lang);
     if (filePath.empty()) {
@@ -70,14 +68,8 @@ Response handleHead(const Request& request) {
         response.bodyLength = response.body.size();
         return response;
     }
-    std::ifstream infile(filePath);
-    if (!infile.good()) {
-        Response response = Response::not_found();
-        response.body = "File not found";
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
-    }
+    std::ifstream infile(filePath, std::ios::binary | std::ios::ate);
+    size_t fileSize = infile.tellg();
     infile.close();
 
     Response response = Response::ok("");
@@ -88,7 +80,7 @@ Response handleHead(const Request& request) {
         response.headers["Content-Type"] = "text/plain";
     }
     response.body.clear(); // No body for HEAD
-    response.bodyLength = 0;
+    response.bodyLength = fileSize; // Set correct content length for header
     return response;
 }
 
@@ -98,11 +90,11 @@ Response handleHead(const Request& request) {
  * @return HTTP response
  */
 Response handlePut(const Request& request) {
-    std::string filePath = resolveFilePath(request.path, "");
-    // Only allow .txt files for PUT
-    if (filePath.empty() || filePath.size() < 4 || filePath.substr(filePath.size() - 4) != ".txt") {
+    std::string baseName;
+    if (!isValidPutPath(request.path, baseName)) {
         return handleBadRequest("Invalid or missing path for PUT");
     }
+    std::string filePath = "C:\\temp\\" + baseName + ".txt";
     bool fileExists = false;
     {
         std::ifstream infile(filePath);
@@ -143,11 +135,11 @@ Response handlePut(const Request& request) {
  * @return HTTP response
  */
 Response handleDelete(const Request& request) {
-    std::string filePath = resolveFilePath(request.path, "");
-    // Only allow .txt files for DELETE
-    if (filePath.empty() || filePath.size() < 4 || filePath.substr(filePath.size() - 4) != ".txt") {
+    std::string baseName;
+    if (!isValidPutPath(request.path, baseName)) {
         return handleBadRequest("Invalid or missing path for DELETE");
     }
+    std::string filePath = "C:\\temp\\" + baseName + ".txt";
     std::ifstream infile(filePath);
     if (!infile.good()) {
         Response response = Response::not_found();
@@ -157,7 +149,6 @@ Response handleDelete(const Request& request) {
         return response;
     }
     infile.close();
-
     if (std::remove(filePath.c_str()) == 0) {
         Response response = Response::ok("File deleted: " + filePath.substr(filePath.find_last_of("\\/") + 1));
         response.headers["Content-Type"] = "text/plain";
