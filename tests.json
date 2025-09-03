@@ -146,6 +146,49 @@
           }
         }
       ]
+    },
+    {
+      "name": "POST /echo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "This is a test body"
+        },
+        "url": {
+          "raw": "http://localhost:8080/echo",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["echo"]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Content-Type is text/plain\", function () {",
+              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
+              "});",
+              "pm.test(\"Body matches input\", function () {",
+              "    pm.response.to.have.body(\"This is a test body\");",
+              "});"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

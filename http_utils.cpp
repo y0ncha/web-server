@@ -1,10 +1,35 @@
 ﻿#include "http_utils.h"
 
+
+/**
+ * @brief Handles GET requests by dispatching to the appropriate handler based on the path.
+ * @param request HTTP request
+ * @return HTTP response
+ */
+Response handleGet(const Request& request) {
+
+	if (request.path == "/health") { // Health check endpoint
+        return health();
+    } 
+	else { // Fallback to static HTML file serving (return 404 if not found)
+        return fetchHtmlFile(request);
+    } 
+}
+
+Response handlePost(const Request& request) {
+    if (request.path == "/echo") { // Echo endpoint
+        return echo(request);
+    } 
+    else {
+        return handleNotFound("Unsupported POST endpoint");
+    }
+}
+
 /**
  * @brief Handles GET /health endpoint.
  * @return Plain text health check response
  */
-Response handleHealth() {
+Response health() {
     Response response = Response::ok("Computer Networks Web Server Assignment");
     response.headers["Content-Type"] = "text/plain";
     return response;
@@ -15,15 +40,14 @@ Response handleHealth() {
  * @param request HTTP request
  * @return Echoed message or bad request response if missing
  */
-Response handleEcho(const Request& request) {
-    std::string message = request.getQparams("msg");
+Response echo(const Request& request) {
+
+	std::string message = request.body;
     Response response;
-    if (message.empty()) {
-        response = handleBadRequest("Missing 'msg' query parameter");
-        return response;
-    }
+
+    std::cout << "[POST] Received body: \"" << request.body << "\"\n";
     response = Response::ok(message);
-    response.headers["Content-Type"] = "text/plain";
+
     return response;
 }
 
@@ -66,9 +90,10 @@ std::string resolveFilePath(const std::string& path, const std::string& lang) {
  * @param request HTTP request
  * @return File contents or not found response
  */
-Response handleHtmlFile(const Request& request) {
+Response fetchHtmlFile(const Request& request) {
     std::string lang = request.getQparams("lang");
     std::string filePath = resolveFilePath(request.path, lang);
+
     if (filePath.empty()) {
         std::ostringstream ss;
         ss << "File not found for path " << request.path;

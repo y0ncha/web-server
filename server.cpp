@@ -102,16 +102,11 @@ void Server::dispatch(Client& client) {
     client.keepAlive = isKeepAlive(request);
     Response response;
     if (request.method == "GET") {
-        if (request.path == "/health") {
-            response = handleHealth();
-        }
-        else if (request.path == "/echo") {
-            response = handleEcho(request);
-        }
-        else {
-            response = handleHtmlFile(request);
-        }
+		response = handleGet(request);
     }
+    else if (request.method == "POST") {
+        response = handlePost(request);
+	}
     else {
         response = handleBadRequest("Unsupported HTTP method");
     }
