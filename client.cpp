@@ -1,7 +1,10 @@
 #include "client.h"
+#include <ctime>
 
 /**
- * Constructs a client with socket and address.
+ * @brief Constructs a client with socket and address.
+ * @param s Socket descriptor
+ * @param addr Client address
  */
 Client::Client(SOCKET s, const sockaddr_in& addr)
     : socket(s), lastActive(0), keepAlive(true), state(ClientState::AwaitingRequest) {
@@ -13,7 +16,7 @@ Client::Client(SOCKET s, const sockaddr_in& addr)
 }
 
 /**
- * Default constructor for Client.
+ * @brief Default constructor for Client.
  */
 Client::Client()
     : socket(INVALID_SOCKET), lastActive(0), keepAlive(true), state(ClientState::Disconnected) {
@@ -22,10 +25,13 @@ Client::Client()
     outBuffer.reserve(BUFF_SIZE);
 }
 
+/**
+ * @brief Destructor for Client.
+ */
 Client::~Client() {}
 
 /**
- * Sets client state to Disconnected.
+ * @brief Sets client state to Disconnected.
  */
 void Client::setDisconnected() {
     state = ClientState::Disconnected;
@@ -33,7 +39,7 @@ void Client::setDisconnected() {
 }
 
 /**
- * Sets client state to AwaitingRequest.
+ * @brief Sets client state to AwaitingRequest.
  */
 void Client::setAwaitingRequest() {
     lastActive = time(nullptr);
@@ -42,7 +48,7 @@ void Client::setAwaitingRequest() {
 }
 
 /**
- * Sets client state to RequestBuffered.
+ * @brief Sets client state to RequestBuffered.
  */
 void Client::setRequestBuffered() {
     lastActive = time(nullptr);
@@ -51,7 +57,7 @@ void Client::setRequestBuffered() {
 }
 
 /**
- * Sets client state to ResponseReady.
+ * @brief Sets client state to ResponseReady.
  */
 void Client::setResponseReady() {
     state = ClientState::ResponseReady;
@@ -59,7 +65,7 @@ void Client::setResponseReady() {
 }
 
 /**
- * Sets client state to Completed.
+ * @brief Sets client state to Completed.
  */
 void Client::setCompleted() {
     inBuffer.clear();
@@ -69,7 +75,7 @@ void Client::setCompleted() {
 }
 
 /**
- * Sets client state to Aborted.
+ * @brief Sets client state to Aborted.
  */
 void Client::setAborted() {
     state = ClientState::Aborted;
@@ -77,14 +83,17 @@ void Client::setAborted() {
 }
 
 /**
- * Checks if client is idle for longer than timeoutSec seconds.
+ * @brief Checks if client is idle for longer than timeoutSec seconds.
+ * @param timeoutSec Timeout in seconds
+ * @return True if idle, false otherwise
  */
 bool Client::isIdle(int timeoutSec) const {
     return (difftime(time(nullptr), lastActive) > timeoutSec && state == ClientState::AwaitingRequest);
 }
 
 /**
- * Buffers incoming request data.
+ * @brief Buffers incoming request data.
+ * @param data Incoming data
  */
 void Client::bufferRequest(const std::string& data) {
     inBuffer.append(data);

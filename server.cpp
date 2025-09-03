@@ -1,7 +1,10 @@
 #include "server.h"
 
 /**
- * Server constructor: initializes Winsock and sets up the listening socket.
+ * @brief Server constructor: initializes Winsock and sets up the listening socket.
+ * @param ip Server IP address
+ * @param port Server port
+ * @param bufferSize Buffer size for client data
  */
 Server::Server(const std::string& ip, int port, std::size_t bufferSize)
     : ip_(ip), port_(port), BUFF_SIZE(bufferSize)
@@ -28,7 +31,7 @@ Server::Server(const std::string& ip, int port, std::size_t bufferSize)
 }
 
 /**
- * Server destructor: cleans up all client connections and Winsock.
+ * @brief Server destructor: cleans up all client connections and Winsock.
  */
 Server::~Server() {
     for (auto& kv : clients) {
@@ -43,7 +46,9 @@ Server::~Server() {
 }
 
 /**
- * Reports an error and optionally cleans up Winsock.
+ * @brief Reports an error and optionally cleans up Winsock.
+ * @param message Error message
+ * @param cleanupWSA Whether to cleanup Winsock
  */
 void Server::reportError(const std::string& message, bool cleanupWSA) {
     std::cerr << "Web Server: " << message << " Error: " << WSAGetLastError() << std::endl;
@@ -57,7 +62,8 @@ void Server::reportError(const std::string& message, bool cleanupWSA) {
 }
 
 /**
- * Starts listening for incoming connection requests.
+ * @brief Starts listening for incoming connection requests.
+ * @return True if successful, false otherwise
  */
 bool Server::listen() {
     if (SOCKET_ERROR == ::listen(listenSocket, 5)) {
@@ -73,7 +79,10 @@ bool Server::listen() {
 }
 
 /**
- * Adds a new client to the clients map.
+ * @brief Adds a new client to the clients map.
+ * @param clientSocket Client socket
+ * @param addr Client address
+ * @return True if successful, false otherwise
  */
 bool Server::addClient(SOCKET clientSocket, const sockaddr_in& addr) {
     unsigned long flag = 1;
@@ -95,7 +104,8 @@ bool Server::addClient(SOCKET clientSocket, const sockaddr_in& addr) {
 }
 
 /**
- * Dispatches the request to the appropriate handler and prepares the response.
+ * @brief Dispatches the request to the appropriate handler and prepares the response.
+ * @param client Reference to client object
  */
 void Server::dispatch(Client& client) {
     Request request(client.inBuffer); // Parse the buffered request
@@ -121,7 +131,7 @@ void Server::dispatch(Client& client) {
 }
 
 /**
- * Accepts a new client connection.
+ * @brief Accepts a new client connection.
  */
 void Server::acceptConnection() {
     sockaddr_in from;
@@ -137,7 +147,8 @@ void Server::acceptConnection() {
 }
 
 /**
- * Receives a message from the client and buffers it.
+ * @brief Receives a message from the client and buffers it.
+ * @param client Reference to client object
  */
 void Server::receiveMessage(Client& client) {
     if (client.state != ClientState::AwaitingRequest) {
@@ -169,7 +180,8 @@ void Server::receiveMessage(Client& client) {
 }
 
 /**
- * Sends a message to the client.
+ * @brief Sends a message to the client.
+ * @param client Reference to client object
  */
 void Server::sendMessage(Client& client) {
     if (client.state != ClientState::ResponseReady || client.outBuffer.empty()) {
@@ -195,7 +207,7 @@ void Server::sendMessage(Client& client) {
 }
 
 /**
- * Main server loop: handles connections and client events.
+ * @brief Main server loop: handles connections and client events.
  */
 void Server::run() {
     if (listenSocket == INVALID_SOCKET) {
@@ -232,7 +244,9 @@ void Server::run() {
 }
 
 /**
- * Prepares socket sets for select().
+ * @brief Prepares socket sets for select().
+ * @param readfds Read file descriptor set
+ * @param writefds Write file descriptor set
  */
 void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
     FD_ZERO(&readfds);
@@ -249,7 +263,10 @@ void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
 }
 
 /**
- * Polls sockets for events using select().
+ * @brief Polls sockets for events using select().
+ * @param readfds Read file descriptor set
+ * @param writefds Write file descriptor set
+ * @return True if successful, false otherwise
  */
 bool Server::pollEvents(fd_set& readfds, fd_set& writefds) {
     prepareFdSets(readfds, writefds);
@@ -262,7 +279,10 @@ bool Server::pollEvents(fd_set& readfds, fd_set& writefds) {
 }
 
 /**
- * Processes a client based on its state and socket readiness.
+ * @brief Processes a client based on its state and socket readiness.
+ * @param client Reference to client object
+ * @param readfds Read file descriptor set
+ * @param writefds Write file descriptor set
  */
 void Server::processClient(Client& client, fd_set& readfds, fd_set& writefds) {
     SOCKET sock = client.socket;

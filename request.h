@@ -5,7 +5,10 @@
 #include <algorithm>
 #include <cctype>
 
-// Represents an HTTP request and provides parsing utilities
+/**
+ * @brief Represents an HTTP request and provides utilities for parsing and accessing its components.
+ * @details Parses the raw HTTP request string into method, path, version, headers, and body.
+ */
 class Request {
 public:
     // HTTP method (GET, POST, etc.)
@@ -21,9 +24,10 @@ public:
     // Request body
     std::string body;
 
-    // Constructs a Request from a raw HTTP request string
+	// Constructs a Request from a raw HTTP request string
     Request(const std::string& raw);
-    // Gets the value of a query parameter by key
+
+	// Gets the value of a query parameter by key
     std::string getQparams(const std::string& key) const;
 };
 

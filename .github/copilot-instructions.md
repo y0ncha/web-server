@@ -10,6 +10,7 @@ This is a C++ educational project implementing a TCP non-blocking, single-thread
 - **CRITICAL**: This project is Windows-specific and uses Winsock2 APIs
 - **Cannot build on Linux/macOS** without cross-compilation tools
 - Original design targets Visual Studio on Windows
+- **CRITICAL** When asked to document or comment use coding format guilinelines below and do not change code logic.
 
 ### Cross-Platform Development Setup
 For development on Linux (required for this environment):
@@ -177,7 +178,7 @@ To ensure readability, maintainability, and consistency across all source files,
 
 ### Comments and Documentation
 - Use //... style above declarations (especially in .h files)
-- Use /** ... */ block format for function definitions:
+- Use /** ... */ block format for function and classes definitions:
 	  /**
 	   * @breif Sends an HTTP response to the client
 	   * @param clientSocket The socket to respond on

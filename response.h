@@ -3,7 +3,10 @@
 #include <map>
 #include <sstream>
 
-// Represents an HTTP response and provides utilities for HTTP formatting
+/**
+ * @brief Represents an HTTP response and provides utilities for constructing and formatting it.
+ * @details Manages status code, status message, headers, and body.
+ */
 class Response {
   public:
     // HTTP status code (e.g., 200, 404)

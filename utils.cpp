@@ -2,7 +2,11 @@
 #include <algorithm>
 #include <cctype>
 
-// Trims whitespace from both ends of a string
+/**
+ * @brief Trims whitespace from both ends of a string
+ * @param str The string to trim
+ * @return Trimmed string
+ */
 std::string trim(const std::string& str) {
     auto begin = str.begin();
     while (begin != str.end() && std::isspace(*begin)) {

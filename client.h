@@ -14,10 +14,11 @@
 static constexpr size_t BUFF_SIZE = 1024; // 4KB max buffer size
 
 /**
- * Client connection states for the FSM.
- */ 
+ * @brief Enum representing the state of a client connection.
+ * @details Used for managing the client's lifecycle in the server.
+ */
 enum class ClientState {
-    Disconnected,   // No active client connection
+    Disconnected,      // No active client connection
     AwaitingRequest,   // Waiting for a new request
     RequestBuffered,   // Full request buffered
     ResponseReady,     // Response is ready
@@ -25,10 +26,9 @@ enum class ClientState {
     Aborted            // Socket should be closed
 };
 
-
 /**
- * Represents a connected client with its state and buffers.
- * Implements a simple FSM for connection handling.
+ * @brief Represents a connected client and its state.
+ * @details Manages the client's socket, buffers, state, and timing.
  */
 class Client {
 public:
@@ -40,29 +40,30 @@ public:
     bool keepAlive;                 // Connection: keep-alive or close
     ClientState state;
 
-    // Constructs a client with socket and address.
+	// Constructs a client with socket and address.
     Client(SOCKET s, const sockaddr_in& addr);
-    // Default constructor for Client.
+
+	// Default empty constructor for Client.
     Client();
+
+	// Destructor for Client.
     ~Client();
+
+	// Delete copy constructor and assignment operator to prevent copying
     Client(const Client&) = delete;
     Client& operator=(const Client&) = delete;
 
-    // Sets client state to Disconnected.
+	// State transition methods
     void setDisconnected();
-    // Sets client state to AwaitingRequest.
     void setAwaitingRequest();
-    // Sets client state to RequestBuffered.
     void setRequestBuffered();
-    // Sets client state to ResponseReady.
     void setResponseReady();
-    // Sets client state to Completed.
     void setCompleted();
-    // Sets client state to Aborted.
     void setAborted();
-
-    // Checks if client is idle for longer than timeoutSec seconds.
+    
+	// Checks if the client has been idle for longer than timeoutSec seconds.
     bool isIdle(int timeoutSec = 120) const;
-    // Buffers incoming request data.
+
+	// Buffers incoming data into inBuffer
     void bufferRequest(const std::string& data);
 };
