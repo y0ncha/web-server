@@ -83,6 +83,7 @@ bool isValidPutPath(const std::string& path, std::string& baseName) {
     if (path.empty() || path[0] != '/' || path.size() < 2) {
         return false;
     }
+
     std::string candidate = path.substr(1); // remove leading '/'
     for (char c : candidate) {
         if (!std::isalnum(c) && c != '_' && c != '-') {

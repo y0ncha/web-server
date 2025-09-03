@@ -20,6 +20,9 @@ Response handlePut(const Request& request);
 // Handles POST requests. Echoes body and prints to console.
 Response handlePost(const Request& request);
 
+// Handles DELETE requests. Deletes the .txt file derived from the path.
+Response handleDelete(const Request& request);
+
 // Handles GET /health endpoint. Returns a plain text health check response.
 Response health();
 
