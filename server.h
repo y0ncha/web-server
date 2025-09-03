@@ -45,7 +45,7 @@ private:
     // Sends a message to a client
     void sendMessage(Client& client);
     // Reports an error and optionally cleans up Winsock
-    void reportError(const std::string& message, bool cleanupWSA);
+    void reportError(const std::string& message);
     // Adds a new client to the clients map
     bool addClient(SOCKET clientSocket, const sockaddr_in& addr);
     // Prepares socket sets for select()
