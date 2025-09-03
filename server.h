@@ -44,16 +44,14 @@ private:
     void receiveMessage(Client& client);
     // Sends a message to a client
     void sendMessage(Client& client);
-    // Reports an error and optionally cleans up Winsock
-    void reportError(const std::string& message);
     // Adds a new client to the clients map
     bool addClient(SOCKET clientSocket, const sockaddr_in& addr);
     // Prepares socket sets for select()
-    void prepareFdSets(fd_set& readfds, fd_set& writefds);
+    void prepareFdSets(fd_set& readfds, fd_set& writefds, fd_set& errorfds);
     // Polls sockets for events using select()
-    bool pollEvents(fd_set& readfds, fd_set& writefds);
+    bool pollEvents(fd_set& readfds, fd_set& writefds, fd_set& errorfds);
     // Processes a client based on its state and socket readiness
-    void processClient(Client& client, fd_set& readfds, fd_set& writefds);
+    void processClient(Client& client, fd_set& readfds, fd_set& writefds, fd_set& errorfds);
     // Dispatches the request to the appropriate handler and prepares the response
     void dispatch(Client& client); // FSM: RequestBuffered → ResponseReady
 };

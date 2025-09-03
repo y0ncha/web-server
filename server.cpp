@@ -153,13 +153,13 @@ void Server::receiveMessage(Client& client) {
     }
     recvBuffer.resize(bytesRecv);
     client.inBuffer.append(recvBuffer);
-    // Log received data with timestamp
-    logData("web-server-received.log", client.clientAddr, recvBuffer);
-    // If incomplete request, keep buffering
-    if (!isRequestComplete(recvBuffer)) {
-        // No console output, just log
+	// If incomplete request, keep buffering (state remains AwaitingRequest)
+    if (!isRequestComplete(client.inBuffer)) {
+		logData("web-server-received.log", client.clientAddr, "Partial request received, waiting for more data.");
         return;
     }
+	// Else full request received, log and chnage state to RequestBuffered
+    logData("web-server-received.log", client.clientAddr, recvBuffer);
     client.setRequestBuffered();
 }
 
@@ -206,8 +206,8 @@ void Server::run() {
     }
     std::cout << "Server is running, waiting for connections...\n";
     while (true) {
-        fd_set readfds, writefds;
-        if (!pollEvents(readfds, writefds)) {
+        fd_set readfds, writefds, errorfds;
+        if (!pollEvents(readfds, writefds, errorfds)) {
             logError("Polling events failed", WSAGetLastError());
             WSACleanup();
             return;
@@ -218,7 +218,7 @@ void Server::run() {
         std::vector<SOCKET> clientsToRemove;
         for (auto& kv : clients) {
             Client& client = kv.second;
-            processClient(client, readfds, writefds);
+            processClient(client, readfds, writefds, errorfds);
             if (client.state == ClientState::Aborted || client.state == ClientState::Completed) {
                 closesocket(client.socket);
                 clientsToRemove.push_back(client.socket);
@@ -235,10 +235,14 @@ void Server::run() {
  * @param readfds Read file descriptor set
  * @param writefds Write file descriptor set
  */
-void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
+void Server::prepareFdSets(fd_set& readfds, fd_set& writefds, fd_set& errorfds) {
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
+	FD_ZERO(&errorfds);
+
     FD_SET(listenSocket, &readfds);
+	FD_SET(listenSocket, &errorfds);
+
     for (auto& kv : clients) {
         if (kv.second.state == ClientState::AwaitingRequest) {
             FD_SET(kv.first, &readfds);
@@ -246,6 +250,7 @@ void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
         if (kv.second.state == ClientState::ResponseReady) {
             FD_SET(kv.first, &writefds);
         }
+		FD_SET(kv.first, &errorfds);
     }
 }
 
@@ -253,14 +258,23 @@ void Server::prepareFdSets(fd_set& readfds, fd_set& writefds) {
  * @brief Polls sockets for events using select().
  * @param readfds Read file descriptor set
  * @param writefds Write file descriptor set
+ * @param errorfds Error file descriptor set
  * @return True if successful, false otherwise
  */
-bool Server::pollEvents(fd_set& readfds, fd_set& writefds) {
-    prepareFdSets(readfds, writefds);
-    int nfd = select(0, &readfds, &writefds, NULL, NULL);
+bool Server::pollEvents(fd_set& readfds, fd_set& writefds, fd_set& errorfds) {
+    prepareFdSets(readfds, writefds, errorfds);
+    timeval timeout;
+    timeout.tv_sec = 30; // 30 seconds timeout
+    timeout.tv_usec = 0;
+    int nfd = select(0, &readfds, &writefds, &errorfds, &timeout);
     if (nfd == SOCKET_ERROR) {
         logError("Error at select()", WSAGetLastError());
         return false;
+    }
+    if (nfd == 0) {
+        // Timeout occurred, no sockets ready
+        // Optionally handle idle tasks here
+        return true;
     }
     return true;
 }
@@ -270,9 +284,17 @@ bool Server::pollEvents(fd_set& readfds, fd_set& writefds) {
  * @param client Reference to client object
  * @param readfds Read file descriptor set
  * @param writefds Write file descriptor set
+ * @param errorfds Error file descriptor set
  */
-void Server::processClient(Client& client, fd_set& readfds, fd_set& writefds) {
+void Server::processClient(Client& client, fd_set& readfds, fd_set& writefds, fd_set& errorfds) {
     SOCKET sock = client.socket;
+    // Handle socket errors
+    if (FD_ISSET(sock, &errorfds)) {
+        logError("Socket exception", WSAGetLastError());
+        client.setAborted();
+        closesocket(sock);
+        return;
+    }
     if (FD_ISSET(sock, &readfds) && client.state == ClientState::AwaitingRequest) {
         receiveMessage(client);
     }
@@ -283,6 +305,7 @@ void Server::processClient(Client& client, fd_set& readfds, fd_set& writefds) {
         sendMessage(client);
     }
     else if (client.isIdle()) {
+        logData("web-server-clientidle.log", client.clientAddr, "Client idle for more than 120 seconds.");
         client.setAborted();
     }
 }

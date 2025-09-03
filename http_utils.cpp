@@ -11,7 +11,7 @@ Response handleGet(const Request& request) {
 	if (request.path == "/health") { // Health check endpoint
         return health();
     } 
-	else { // Fallback to static HTML file serving (return 404 if not found)
+	else {
         return fetchHtmlFile(request);
     } 
 }
@@ -21,7 +21,7 @@ Response handlePost(const Request& request) {
         return echo(request);
     } 
     else {
-        return handleNotFound("Unsupported POST endpoint");
+        return handleBadRequest("Unsupported POST endpoint");
     }
 }
 
@@ -146,21 +146,32 @@ Response handleBadRequest(const std::string& error) {
  * @return Content-Length value
  */
 size_t getContentLength(const std::string& rawHeaders) {
-    size_t clPos = rawHeaders.find("Content-Length:");
-    if (clPos == std::string::npos) {
-        return 0;
+    std::istringstream stream(rawHeaders);
+    std::string line;
+
+    while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        std::string lowerLine = line;
+        std::transform(lowerLine.begin(), lowerLine.end(), lowerLine.begin(), ::tolower);
+
+        if (lowerLine.rfind("content-length:", 0) == 0) {
+            size_t colonPos = line.find(':');
+            if (colonPos != std::string::npos) {
+                std::string clVal = line.substr(colonPos + 1);
+                clVal.erase(std::remove_if(clVal.begin(), clVal.end(), ::isspace), clVal.end());
+                try {
+                    return std::stoul(clVal);
+                }
+                catch (...) {
+                    return 0;
+                }
+            }
+        }
     }
-    size_t clEnd = rawHeaders.find("\r\n", clPos);
-    if (clEnd == std::string::npos) {
-        return 0;
-    }
-    std::string clVal = rawHeaders.substr(clPos + 15, clEnd - (clPos + 15));
-    clVal.erase(std::remove_if(clVal.begin(), clVal.end(), ::isspace), clVal.end());
-    try {
-        return std::stoul(clVal);
-    } catch (...) {
-        return 0;
-    }
+    return 0;
 }
 
 /**

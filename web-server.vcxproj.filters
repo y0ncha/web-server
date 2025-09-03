@@ -67,7 +67,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="tests.json">
+    <None Include="postman-tests.json">
       <Filter>Documents</Filter>
     </None>
   </ItemGroup>
