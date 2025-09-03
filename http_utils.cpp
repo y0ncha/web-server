@@ -1,5 +1,5 @@
 ﻿#include "http_utils.h"
-
+#include "response.h"
 
 /**
  * @brief Handles GET requests for files with language support and /health endpoint.
@@ -7,23 +7,17 @@
  * @return HTTP response
  */
 Response handleGet(const Request& request) {
- 
+    if (request.path == "/health") {
+        return health();
+    }
     std::string lang = request.getQparams("lang");
     std::string filePath = resolveFilePath(request.path, lang);
     if (filePath.empty()) {
-        Response response = Response::not_found();
-        response.body = "File not found";
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
+        return handleNotFound(request.path);
     }
     std::ifstream infile(filePath);
     if (!infile.good()) {
-        Response response = Response::not_found();
-        response.body = "File not found";
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
+        return handleNotFound(filePath);
     }
     std::ostringstream ss;
     ss << infile.rdbuf();
@@ -62,11 +56,7 @@ Response handleHead(const Request& request) {
     std::string lang = request.getQparams("lang");
     std::string filePath = resolveFilePath(request.path, lang);
     if (filePath.empty()) {
-        Response response = Response::not_found();
-        response.body = "File not found";
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
+        return handleNotFound(request.path);
     }
     std::ifstream infile(filePath, std::ios::binary | std::ios::ate);
     size_t fileSize = infile.tellg();
@@ -92,7 +82,7 @@ Response handleHead(const Request& request) {
 Response handlePut(const Request& request) {
     std::string baseName;
     if (!isValidPutPath(request.path, baseName)) {
-        return handleBadRequest("Invalid or missing path for PUT");
+        return handleBadRequest("Invalid or missing path for PUT: " + request.path);
     }
     std::string filePath = "C:\\temp\\" + baseName + ".txt";
     bool fileExists = false;
@@ -103,30 +93,19 @@ Response handlePut(const Request& request) {
     try {
         std::ofstream outfile(filePath, std::ios::trunc);
         if (!outfile.is_open()) {
-            return Response::bad_request();
+            return handleBadRequest("Could not open file for writing: " + filePath);
         }
         outfile << request.body;
         outfile.close();
     } catch (...) {
-        Response response;
-        response.statusCode = 500;
-        response.statusMessage = "Internal Server Error";
-        response.body = "Error writing file";
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
+        return handleInternalError("Error writing file: " + filePath);
     }
-    Response response;
+    std::string fileName = filePath.substr(filePath.find_last_of("\\/") + 1);
     if (fileExists) {
-        response = Response::ok("File overwritten: " + filePath.substr(filePath.find_last_of("\\/") + 1));
+        return handleOk(fileName);
     } else {
-        response.statusCode = 201;
-        response.statusMessage = "Created";
-        response.body = "File created: " + filePath.substr(filePath.find_last_of("\\/") + 1);
-        response.bodyLength = response.body.size();
+        return handleCreated(fileName);
     }
-    response.headers["Content-Type"] = "text/plain";
-    return response;
 }
 
 /**
@@ -137,32 +116,36 @@ Response handlePut(const Request& request) {
 Response handleDelete(const Request& request) {
     std::string baseName;
     if (!isValidPutPath(request.path, baseName)) {
-        return handleBadRequest("Invalid or missing path for DELETE");
+        return handleBadRequest("Invalid or missing path for DELETE: " + request.path);
     }
     std::string filePath = "C:\\temp\\" + baseName + ".txt";
     std::ifstream infile(filePath);
     if (!infile.good()) {
-        Response response = Response::not_found();
-        response.body = "File not found";
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
+        return handleNotFound(filePath);
     }
     infile.close();
+    std::string fileName = filePath.substr(filePath.find_last_of("\\/") + 1);
     if (std::remove(filePath.c_str()) == 0) {
-        Response response = Response::ok("File deleted: " + filePath.substr(filePath.find_last_of("\\/") + 1));
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
+        return handleOk(fileName);
     } else {
-        Response response;
-        response.statusCode = 500;
-        response.statusMessage = "Internal Server Error";
-        response.body = "Error deleting file";
-        response.headers["Content-Type"] = "text/plain";
-        response.bodyLength = response.body.size();
-        return response;
+        return handleInternalError("Error deleting file: " + fileName);
     }
+}
+
+/**
+ * @brief Handles TRACE requests by echoing back the raw HTTP request string.
+ * @param request HTTP request
+ * @return HTTP response
+ */
+Response handleTrace(const Request& request) {
+    std::ostringstream ss;
+    for (const auto& header : request.headers) {
+        ss << header.first << ": " << header.second << "\r\n";
+    }
+    ss << "\r\n" << request.body;
+    Response response = Response::ok(ss.str());
+    response.bodyLength = response.body.size();
+    return response;
 }
 
 /**
@@ -172,6 +155,7 @@ Response handleDelete(const Request& request) {
 Response health() {
     Response response = Response::ok("Computer Networks Web Server Assignment");
     response.headers["Content-Type"] = "text/plain";
+    response.bodyLength = response.body.size();
     return response;
 }
 
@@ -228,14 +212,8 @@ std::string resolveFilePath(const std::string& path, const std::string& lang) {
  * @param error Error message
  * @return Not found response
  */
-Response handleNotFound(const std::string& error) {
-    Response response = Response::not_found();
-    if (!error.empty()) {
-        response.body += " : ";
-        response.body += error;
-		response.bodyLength = response.body.size();
-    }
-    return response;
+Response handleNotFound(const std::string& context) {
+    return Response::not_found("Path not found: " + context);
 }
 
 /**
@@ -243,14 +221,35 @@ Response handleNotFound(const std::string& error) {
  * @param error Error message
  * @return Bad request response
  */
-Response handleBadRequest(const std::string& error) {
-    Response response = Response::bad_request();
-    if (!error.empty()) {
-        response.body += " : ";
-        response.body += error;
-		response.bodyLength = response.body.size();
-    }
-    return response;
+Response handleBadRequest(const std::string& context) {
+    return Response::bad_request("Bad request: " + context);
+}
+
+/**
+ * @brief Returns a 201 Created response, optionally with a location or message.
+ * @param context Optional context message
+ * @return Created response
+ */
+Response handleCreated(const std::string& context) {
+    return Response::created("File created: " + context);
+}
+
+/**
+ * @brief Returns a 200 OK response, optionally with a message.
+ * @param context Optional context message
+ * @return OK response
+ */
+Response handleOk(const std::string& context) {
+    return Response::ok("File overwritten: " + context);
+}
+
+/**
+ * @brief Returns a 500 Internal Server Error response, optionally with an error message.
+ * @param error Error message
+ * @return Internal error response
+ */
+Response handleInternalError(const std::string& context) {
+    return Response::internal_error("Internal error: " + context);
 }
 
 /**

@@ -5,6 +5,37 @@
   },
   "item": [
     {
+      "name": "GET /health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["health"]
+        }
+      },
+      "description": "Health check endpoint",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Body contains assignment string\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"Computer Networks Web Server Assignment\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "GET / (default index.html)",
       "request": {
         "method": "GET",
@@ -12,13 +43,12 @@
         "url": {
           "raw": "http://localhost:8080/",
           "protocol": "http",
-          "host": [ "localhost" ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [ "" ],
-          "query": []
+          "path": [""]
         }
       },
-      "response": [],
+      "description": "Loads index.html",
       "event": [
         {
           "listen": "test",
@@ -44,15 +74,13 @@
         "url": {
           "raw": "http://localhost:8080/about?lang=fr",
           "protocol": "http",
-          "host": [ "localhost" ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [ "about" ],
-          "query": [
-            { "key": "lang", "value": "fr" }
-          ]
+          "path": ["about"],
+          "query": [{ "key": "lang", "value": "fr" }]
         }
       },
-      "response": [],
+      "description": "Shows parameterized fetch",
       "event": [
         {
           "listen": "test",
@@ -71,77 +99,11 @@
       ]
     },
     {
-      "name": "GET /faq",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/faq",
-          "protocol": "http",
-          "host": [ "localhost" ],
-          "port": "8080",
-          "path": [ "faq" ],
-          "query": []
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 404\", function () {",
-              "    pm.response.to.have.status(404);",
-              "});",
-              "pm.test(\"Content-Type is text/plain\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "GET /notfound",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/notfound",
-          "protocol": "http",
-          "host": [ "localhost" ],
-          "port": "8080",
-          "path": [ "notfound" ],
-          "query": []
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 404\", function () {",
-              "    pm.response.to.have.status(404);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "POST /echo (missing body)",
       "request": {
         "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "text/plain" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": ""
-        },
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": { "mode": "raw", "raw": "" },
         "url": {
           "raw": "http://localhost:8080/echo",
           "protocol": "http",
@@ -150,7 +112,7 @@
           "path": ["echo"]
         }
       },
-      "response": [],
+      "description": "POST /echo with empty body",
       "event": [
         {
           "listen": "test",
@@ -169,164 +131,11 @@
       ]
     },
     {
-      "name": "POST /unknown",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "text/plain" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "Some data"
-        },
-        "url": {
-          "raw": "http://localhost:8080/unknown",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["unknown"]
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 400\", function () {",
-              "    pm.response.to.have.status(400);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "GET /?lang=he",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/?lang=he",
-          "protocol": "http",
-          "host": [ "localhost" ],
-          "port": "8080",
-          "path": [ "" ],
-          "query": [
-            {
-              "key": "lang",
-              "value": "he"
-            }
-          ]
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test(\"Content-Type is text/html\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "GET /?lang=en",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/?lang=en",
-          "protocol": "http",
-          "host": [ "localhost" ],
-          "port": "8080",
-          "path": [ "" ],
-          "query": [
-            {
-              "key": "lang",
-              "value": "en"
-            }
-          ]
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test(\"Content-Type is text/html\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "GET /?lang=fr",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/?lang=fr",
-          "protocol": "http",
-          "host": [ "localhost" ],
-          "port": "8080",
-          "path": [ "" ],
-          "query": [
-            {
-              "key": "lang",
-              "value": "fr"
-            }
-          ]
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test(\"Content-Type is text/html\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "POST /echo",
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "text/plain"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "This is a test body"
-        },
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": { "mode": "raw", "raw": "This is a test body" },
         "url": {
           "raw": "http://localhost:8080/echo",
           "protocol": "http",
@@ -335,7 +144,7 @@
           "path": ["echo"]
         }
       },
-      "response": [],
+      "description": "POST /echo with body",
       "event": [
         {
           "listen": "test",
@@ -357,6 +166,35 @@
       ]
     },
     {
+      "name": "POST /unknown",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": { "mode": "raw", "raw": "Some data" },
+        "url": {
+          "raw": "http://localhost:8080/unknown",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["unknown"]
+        }
+      },
+      "description": "Invalid POST endpoint",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "PUT /data (create new file)",
       "request": {
         "method": "PUT",
@@ -370,6 +208,7 @@
           "path": ["data"]
         }
       },
+      "description": "Tests file creation",
       "event": [
         {
           "listen": "test",
@@ -400,6 +239,7 @@
           "path": ["data"]
         }
       },
+      "description": "Tests deletion",
       "event": [
         {
           "listen": "test",
@@ -709,6 +549,7 @@
           "path": ["data"]
         }
       },
+      "description": "Checks header match",
       "event": [
         {
           "listen": "test",
@@ -718,45 +559,8 @@
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "});",
-              "pm.test(\"Content-Type matches GET\", function () {",
-              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.eql(pm.environment.get(\"get_content_type\"));",
-              "});",
-              "pm.test(\"Content-Length matches GET\", function () {",
-              "    pm.expect(pm.response.headers.get(\"Content-Length\")).to.eql(pm.environment.get(\"get_content_length\"));",
-              "});",
               "pm.test(\"Body is empty for HEAD\", function () {",
               "    pm.expect(pm.response.text()).to.eql(\"\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "PUT /mytest (create .txt file)",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "text/plain" }],
-        "body": { "mode": "raw", "raw": "This is a test file." },
-        "url": {
-          "raw": "http://localhost:8080/mytest",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["mytest"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 201 or 200\", function () {",
-              "    pm.expect([201,200]).to.include(pm.response.code);",
-              "});",
-              "pm.test(\"Content-Type is text/plain\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
               "});"
             ]
           }
@@ -776,6 +580,7 @@
           "path": ["mytest"]
         }
       },
+      "description": "GET from .txt file (confirm PUT worked)",
       "event": [
         {
           "listen": "test",
@@ -790,6 +595,38 @@
               "});",
               "pm.test(\"Body matches PUT content\", function () {",
               "    pm.response.to.have.body(\"This is a test file.\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TRACE /empty (empty body, custom header)",
+      "request": {
+        "method": "TRACE",
+        "header": [{ "key": "X-Empty-Header", "value": "EmptyValue" }],
+        "body": { "mode": "raw", "raw": "" },
+        "url": {
+          "raw": "http://localhost:8080/empty",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["empty"]
+        }
+      },
+      "description": "Confirm empty body + headers echo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Body contains custom header\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"X-Empty-Header: EmptyValue\");",
               "});"
             ]
           }

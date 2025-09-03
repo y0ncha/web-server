@@ -103,7 +103,7 @@ void Server::dispatch(Client& client) {
     Response response;
 
     if (request.method == "GET") {
-		response = request.path == "health" ? health() : handleGet(request);
+		response = handleGet(request);
     }
     else if (request.method == "POST") {
         response = handlePost(request);

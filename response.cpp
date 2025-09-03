@@ -16,35 +16,67 @@ Response Response::ok(const std::string& body) {
     response.statusCode = 200;
     response.statusMessage = "OK";
     response.body = body;
-	response.bodyLength = body.size();
+    response.bodyLength = body.size();
     response.headers["Content-Type"] = "text/plain";
     return response;
 }
 
 /**
- * @brief Creates a 404 Not Found response
+ * @brief Creates a 404 Not Found response with body
+ * @param body Response body
  * @return Response object
  */
-Response Response::not_found() {
+Response Response::not_found(const std::string& body) {
     Response response;
     response.statusCode = 404;
     response.statusMessage = "Not Found";
-    response.body = "404 Not Found";
-    response.bodyLength = response.body.size();
+    response.body = body;
+    response.bodyLength = body.size();
     response.headers["Content-Type"] = "text/plain";
     return response;
 }
 
 /**
- * @brief Creates a 400 Bad Request response
+ * @brief Creates a 400 Bad Request response with body
+ * @param body Response body
  * @return Response object
  */
-Response Response::bad_request() {
+Response Response::bad_request(const std::string& body) {
     Response response;
     response.statusCode = 400;
     response.statusMessage = "Bad Request";
-    response.body = "400 Bad Request";
-	response.bodyLength = response.body.size();
+    response.body = body;
+    response.bodyLength = body.size();
+    response.headers["Content-Type"] = "text/plain";
+    return response;
+}
+
+/**
+ * @brief Creates a 201 Created response with body
+ * @param body Response body
+ * @return Response object
+ */
+Response Response::created(const std::string& body) {
+    Response response;
+    response.statusCode = 201;
+    response.statusMessage = "Created";
+    response.body = body;
+    response.bodyLength = body.size();
+    response.headers["Content-Type"] = "text/plain";
+    return response;
+}
+
+/**
+ * @brief Creates a 500 Internal Server Error response with body
+ * @param body Response body
+ * @return Response object
+ */
+Response Response::internal_error(const std::string& body) {
+    Response response;
+    response.statusCode = 500;
+    response.statusMessage = "Internal Server Error";
+    response.body = body;
+    response.bodyLength = body.size();
     response.headers["Content-Type"] = "text/plain";
     return response;
 }

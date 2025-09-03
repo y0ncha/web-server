@@ -17,17 +17,26 @@ class Response {
     std::map<std::string, std::string> headers;
     // Response body
     std::string body;
-	// Body length
-	size_t bodyLength;
+    // Body length
+    size_t bodyLength;
 
     // Constructs a Response with default values
     Response();
+
+	// Default presets :
+    // 
     // Creates a 200 OK response with body
-    static Response ok(const std::string& body);
+    static Response ok(const std::string& body = "");
     // Creates a 404 Not Found response
-    static Response not_found();
+    static Response not_found(const std::string& body = "");
     // Creates a 400 Bad Request response
-    static Response bad_request();
+    static Response bad_request(const std::string& body = "");
+    // Creates a 201 Created response with body
+    static Response created(const std::string& body = "");
+    // Creates a 500 Internal Server Error response with body
+    static Response internal_error(const std::string& body = "");
     // Converts the response to a raw HTTP string
+
+
     std::string toString() const;
 };
