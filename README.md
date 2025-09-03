@@ -1,7 +1,7 @@
 # TCP Non-Blocking Single-Threaded Async HTTP Server
 
 This repository contains a C++ implementation of a TCP non-blocking, single-threaded, asynchronous HTTP server.  
-It is developed as a Computer Networks course assignment by [y0ncha](https://github.com/y0ncha), with the primary objective being a **deep conceptual understanding** of transport protocols and asynchronous I/O—not real-world or hands-on deployment.
+It is developed as a Computer Networks course assignment by [y0ncha](https://github.com/y0ncha), with the primary objective being a **deep conceptual understanding** of transport protocols and asynchronous event-driven server architectures.
 
 ## Objectives
 
