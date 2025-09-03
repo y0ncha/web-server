@@ -1,6 +1,4 @@
 #include "client.h"
-#include "utils.h"
-#include <ctime>
 
 // Helper to convert ClientState to string
 static std::string clientStateToString(ClientState state) {

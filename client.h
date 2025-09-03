@@ -3,14 +3,15 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <winsock2.h>
-#pragma comment(lib, "Ws2_32.lib")
 #include <string>
 #include <iostream>
 #include <memory>
-#include "request.h"
-#include "response.h"
 #include <sstream>
 #include <ctime>
+#include "request.h"
+#include "response.h"
+#include "utils.h"
+#pragma comment(lib, "Ws2_32.lib")
 
 static constexpr size_t BUFF_SIZE = 1024; // 4KB max buffer size
 
