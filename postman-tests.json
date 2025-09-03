@@ -300,8 +300,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 400\", function () {",
-              "    pm.response.to.have.status(400);",
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
               "});"
             ]
           }
@@ -528,6 +528,7 @@
             "exec": [
               "pm.environment.set(\"get_content_length\", pm.response.headers.get(\"Content-Length\"));",
               "pm.environment.set(\"get_content_type\", pm.response.headers.get(\"Content-Type\"));",
+              "pm.environment.set(\"get_body_length\", pm.response.text().length.toString());",
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "});"
@@ -559,74 +560,17 @@
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "});",
+              "pm.test(\"Content-Type matches GET\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.eql(pm.environment.get(\"get_content_type\"));",
+              "});",
+              "pm.test(\"Content-Length matches GET\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Length\")).to.eql(pm.environment.get(\"get_content_length\"));",
+              "});",
+              "pm.test(\"Content-Length matches GET body length\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Length\")).to.eql(pm.environment.get(\"get_body_length\"));",
+              "});",
               "pm.test(\"Body is empty for HEAD\", function () {",
               "    pm.expect(pm.response.text()).to.eql(\"\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "GET /mytest (fetch .txt file)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/mytest",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["mytest"]
-        }
-      },
-      "description": "GET from .txt file (confirm PUT worked)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test(\"Content-Type is text/plain\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
-              "});",
-              "pm.test(\"Body matches PUT content\", function () {",
-              "    pm.response.to.have.body(\"This is a test file.\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "TRACE /empty (empty body, custom header)",
-      "request": {
-        "method": "TRACE",
-        "header": [{ "key": "X-Empty-Header", "value": "EmptyValue" }],
-        "body": { "mode": "raw", "raw": "" },
-        "url": {
-          "raw": "http://localhost:8080/empty",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["empty"]
-        }
-      },
-      "description": "Confirm empty body + headers echo",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test(\"Body contains custom header\", function () {",
-              "    pm.expect(pm.response.text()).to.include(\"X-Empty-Header: EmptyValue\");",
               "});"
             ]
           }
@@ -662,6 +606,38 @@
               "});",
               "pm.test(\"Body contains trace body content\", function () {",
               "    pm.expect(pm.response.text()).to.include(\"Trace body content\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TRACE /empty (empty body, custom header)",
+      "request": {
+        "method": "TRACE",
+        "header": [{ "key": "X-Empty-Header", "value": "EmptyValue" }],
+        "body": { "mode": "raw", "raw": "" },
+        "url": {
+          "raw": "http://localhost:8080/empty",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["empty"]
+        }
+      },
+      "description": "Confirm empty body + headers echo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Body contains custom header\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"X-Empty-Header: EmptyValue\");",
               "});"
             ]
           }

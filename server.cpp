@@ -117,6 +117,9 @@ void Server::dispatch(Client& client) {
     else if (request.method == "DELETE") {
 		response = handleDelete(request);
 	}
+	else if (request.method == "TRACE") {
+		response = handleTrace(request);
+    }
     else {
         response = handleBadRequest("Unsupported HTTP method");
     }
