@@ -25,6 +25,12 @@ Response handlePost(const Request& request) {
     }
 }
 
+Response handleHead(const Request& request) {
+	Response response = fetchHtmlFile(request);
+	response.body.clear(); // No body for HEAD
+	return response;
+}
+
 /**
  * @brief Handles GET /health endpoint.
  * @return Plain text health check response

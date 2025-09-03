@@ -4,7 +4,7 @@
  * @brief Constructs a Response with default values
  * @details Default is 200 OK with empty body
  */
-Response::Response() : statusCode(200), statusMessage("OK"), body("") {}
+Response::Response() : statusCode(200), statusMessage("OK"), body(""), bodyLength(0) {}
 
 /**
  * @brief Creates a 200 OK response with body
@@ -16,6 +16,7 @@ Response Response::ok(const std::string& body) {
     response.statusCode = 200;
     response.statusMessage = "OK";
     response.body = body;
+	response.bodyLength = body.size();
     response.headers["Content-Type"] = "text/plain";
     return response;
 }
@@ -29,6 +30,7 @@ Response Response::not_found() {
     response.statusCode = 404;
     response.statusMessage = "Not Found";
     response.body = "404 Not Found";
+    response.bodyLength = response.body.size();
     response.headers["Content-Type"] = "text/plain";
     return response;
 }
@@ -42,6 +44,7 @@ Response Response::bad_request() {
     response.statusCode = 400;
     response.statusMessage = "Bad Request";
     response.body = "400 Bad Request";
+	response.bodyLength = response.body.size();
     response.headers["Content-Type"] = "text/plain";
     return response;
 }
@@ -56,7 +59,7 @@ std::string Response::toString() const {
     for (const auto& header : headers) {
         ss << header.first << ": " << header.second << "\r\n";
     }
-    ss << "Content-Length: " << body.size() << "\r\n";
+    ss << "Content-Length: " << bodyLength << "\r\n";
     ss << "\r\n";
     ss << body;
     return ss.str();

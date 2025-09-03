@@ -14,6 +14,9 @@ Response handleGet(const Request& request);
 // Handles POST requests. Currently only supports /echo endpoint.
 Response handlePost(const Request& request);
 
+// Handles HEAD requests by fetching the HTML file and returning headers only.
+Response handleHead(const Request& request);
+
 // Handles GET /health endpoint. Returns a plain text health check response.
 Response health();
 

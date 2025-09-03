@@ -107,6 +107,9 @@ void Server::dispatch(Client& client) {
     else if (request.method == "POST") {
         response = handlePost(request);
 	}
+	else if (request.method == "HEAD") {
+		response = handleHead(request);
+	}
     else {
         response = handleBadRequest("Unsupported HTTP method");
     }
