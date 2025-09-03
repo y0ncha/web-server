@@ -13,41 +13,56 @@
 
 static constexpr size_t BUFF_SIZE = 1024; // 4KB max buffer size
 
-// Client states for the FSM
+/**
+ * Client connection states for the FSM.
+ */ 
 enum class ClientState {
     Disconnected,   // No active client connection
     AwaitingRequest,   // Waiting for a new request
     RequestBuffered,   // Full request buffered
     ResponseReady,     // Response is ready
-    Completed,          // Done, ready for next or close
-    Aborted         // Socket should be closed
+    Completed,         // Done, ready for next or close
+    Aborted            // Socket should be closed
 };
 
+
+/**
+ * Represents a connected client with its state and buffers.
+ * Implements a simple FSM for connection handling.
+ */
 class Client {
 public:
-
     SOCKET socket;                  // Client socket descriptor
-    std::string client_addr;        // Store client address
-    std::string in_buffer;          // Raw incoming data buffer
-    std::string out_buffer;         // Fully constructed HTTP response
-    time_t last_active;             // Used for idle timeout tracking
-	bool keep_alive;                // Connection: keep-alive or close
-
+    std::string clientAddr;         // Store client address
+    std::string inBuffer;           // Raw incoming data buffer
+    std::string outBuffer;          // Fully constructed HTTP response
+    time_t lastActive;              // Used for idle timeout tracking
+    bool keepAlive;                 // Connection: keep-alive or close
     ClientState state;
 
-    Client(SOCKET s, const sockaddr_in& addr); // Add constructor for socket and address
+    // Constructs a client with socket and address.
+    Client(SOCKET s, const sockaddr_in& addr);
+    // Default constructor for Client.
     Client();
     ~Client();
     Client(const Client&) = delete;
     Client& operator=(const Client&) = delete;
 
+    // Sets client state to Disconnected.
     void setDisconnected();
+    // Sets client state to AwaitingRequest.
     void setAwaitingRequest();
+    // Sets client state to RequestBuffered.
     void setRequestBuffered();
+    // Sets client state to ResponseReady.
     void setResponseReady();
+    // Sets client state to Completed.
     void setCompleted();
+    // Sets client state to Aborted.
     void setAborted();
 
-    bool isIdle(int timeout_sec = 120) const;
+    // Checks if client is idle for longer than timeoutSec seconds.
+    bool isIdle(int timeoutSec = 120) const;
+    // Buffers incoming request data.
     void bufferRequest(const std::string& data);
 };

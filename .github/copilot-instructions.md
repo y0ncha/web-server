@@ -90,7 +90,7 @@ For development on Linux (required for this environment):
 - **Minimal HTTP implementation** - basic GET requests only
 - **Single-recv assumption**: Code assumes complete HTTP request fits in one recv() call (simplified for educational purposes)
 - **No SSL/TLS support**
-- **Hardcoded configuration**: IP (127.0.0.1), Port (8080), buffer sizes (512 bytes), timeouts (120 seconds)
+- **Hardcoded configuration**: IP (127.0.0.1), Port (8080), buffer sizes (1024 bytes), timeouts (120 seconds)
 
 ### File Modification Guidelines
 - **Never modify** .vcxproj/.sln files unless adding/removing source files
@@ -140,3 +140,41 @@ Expected output: PE32+ executable for MS Windows, approximately 390KB in size.
 ```
 
 **Remember**: This is Windows-specific educational code. Do not attempt to port to POSIX sockets as it changes the learning objectives around Windows networking APIs.
+
+### Code Formatting Guidelines
+
+To ensure readability, maintainability, and consistency across all source files, follow these conventions throughout the project:
+- Naming Conventions
+
+	| Element                  | Format             | Example                          |
+	|--------------------------|--------------------|----------------------------------|
+	| Classes / Structs        | PascalCase         | HttpRequest, Client              |
+	| Functions                | camelCase          | handleFileRequest(), resolveFilePath() |
+	| Member Variables         | camelCase          | clientSocket, inBuffer           |
+	| Local Variables          | camelCase          | filePath, lang                   |
+	| Constants / Macros       | UPPER_SNAKE_CASE   | MAX_TIMEOUT, RECV_BUFFER_SIZE    |
+	| Filenames                | snake_case         | http_utils.cpp, client_state.h   |
+
+- Indentation: 4 spaces per indentation level (no tabs)
+- Spacing :
+	- One space between keywords and parentheses: if (x > 0)
+	- Leave blank lines between logical blocks
+	- No trailing whitespace
+	- if (condition) {
+         // ...
+      }
+      else {
+         // ...
+      }
+- Best Practices
+	- Include headers in the header fiels
+	- Headers documentaiton should be with "//..." ,above the declaration
+	- Keep functions short and focused
+	- Keep headers lean — only declare what’s needed
+	- Group related declarations and helper functions together
+	- Use consistent comment style:
+	  // This is a single-line comment
+	  /**
+	   * This is a multi-line comment (nutshell style)
+	   * explaining a function or section
+	   */
