@@ -141,40 +141,56 @@ Expected output: PE32+ executable for MS Windows, approximately 390KB in size.
 
 **Remember**: This is Windows-specific educational code. Do not attempt to port to POSIX sockets as it changes the learning objectives around Windows networking APIs.
 
-### Code Formatting Guidelines
+
+## Code Formatting Guidelines
 
 To ensure readability, maintainability, and consistency across all source files, follow these conventions throughout the project:
-- Naming Conventions
 
-	| Element                  | Format             | Example                          |
-	|--------------------------|--------------------|----------------------------------|
-	| Classes / Structs        | PascalCase         | HttpRequest, Client              |
-	| Functions                | camelCase          | handleFileRequest(), resolveFilePath() |
-	| Member Variables         | camelCase          | clientSocket, inBuffer           |
-	| Local Variables          | camelCase          | filePath, lang                   |
-	| Constants / Macros       | UPPER_SNAKE_CASE   | MAX_TIMEOUT, RECV_BUFFER_SIZE    |
-	| Filenames                | snake_case         | http_utils.cpp, client_state.h   |
+### Naming Conventions
 
-- Indentation: 4 spaces per indentation level (no tabs)
-- Spacing :
-	- One space between keywords and parentheses: if (x > 0)
-	- Leave blank lines between logical blocks
-	- No trailing whitespace
-	- if (condition) {
-         // ...
-      }
-      else {
-         // ...
-      }
-- Best Practices
-	- Include headers in the header fiels
-	- Headers documentaiton should be with "//..." ,above the declaration
-	- Keep functions short and focused
-	- Keep headers lean — only declare what’s needed
-	- Group related declarations and helper functions together
-	- Use consistent comment style:
-	  // This is a single-line comment
+| Element            | Format           | Example                          |
+|--------------------|------------------|----------------------------------|
+| Classes / Structs  | PascalCase       | HttpRequest, Client              |
+| Functions          | camelCase        | handleFileRequest(), resolveFilePath() |
+| Member Variables   | camelCase        | clientSocket, inBuffer           |
+| Local Variables    | camelCase        | filePath, lang                   |
+| Constants / Macros | UPPER_SNAKE_CASE | MAX_TIMEOUT, RECV_BUFFER_SIZE    |
+| Filenames          | snake_case       | http_utils.cpp, client_state.h   |
+
+### Indentation & Bracing
+- Use 4 spaces per indentation level (no tabs)
+- Always use braces, even for one-line bodies
+- Style:
+```bash
+  if (condition) {
+	// ...
+  } 
+  else {
+	// ...
+  }
+```
+
+### Spacing
+- One space between keywords and parentheses: if (x > 0)
+- No trailing whitespace
+- Leave blank lines between logical blocks
+
+### Comments and Documentation
+- Use //... style above declarations (especially in .h files)
+- Use /** ... */ block format for function definitions:
 	  /**
-	   * This is a multi-line comment (nutshell style)
-	   * explaining a function or section
+	   * @breif Sends an HTTP response to the client
+	   * @param clientSocket The socket to respond on
+	   * @returns true if success, false otherwise
 	   */
+	   bool sendResponse(int clientSocket) { ... }
+- Use consistent style:
+	- // for inline or short explanatory comments
+	- /** ... */ for “nutshell-style” explanations
+
+### General Best Practices
+- Include only necessary headers
+- Keep headers lean: only declare what’s needed
+- Keep functions short and focused
+- Group related helpers and declarations together
+

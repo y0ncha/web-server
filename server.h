@@ -10,8 +10,8 @@
 #include <ctime>
 #include <algorithm>
 #include <vector>
-#include <fstream> // For std::ifstream
-#include <sstream> // For std::ostringstream
+#include <fstream>
+#include <sstream>
 #include "client.h"
 #include "utils.h"
 #include "http_utils.h"

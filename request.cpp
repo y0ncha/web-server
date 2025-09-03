@@ -4,14 +4,15 @@
 #include <algorithm>
 #include <cctype>
 
+// Constructs a Request from a raw HTTP request string
 Request::Request(const std::string& raw) {
     std::istringstream stream(raw);
     std::string line;
 
     // Parse request line
     if (!std::getline(stream, line) || line.empty()) return;
-    std::istringstream req_line(line);
-    req_line >> method >> path >> version;
+    std::istringstream reqLine(line);
+    reqLine >> method >> path >> version;
 
     // Parse query string
     auto qpos = path.find('?');
@@ -32,14 +33,15 @@ Request::Request(const std::string& raw) {
     }
 
     // Parse body (if any)
-    std::ostringstream body_stream;
+    std::ostringstream bodyStream;
     while (std::getline(stream, line)) {
-        if (!body.empty()) body_stream << "\n";
-        body_stream << line;
+        if (!body.empty()) bodyStream << "\n";
+        bodyStream << line;
     }
-    body = body_stream.str();
+    body = bodyStream.str();
 }
 
+// Gets the value of a query parameter by key
 std::string Request::getQparams(const std::string& key) const {
     std::istringstream qs(query);
     std::string pair;
