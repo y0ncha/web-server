@@ -106,11 +106,7 @@ void Client::setAborted() {
  * @return True if idle, false otherwise
  */
 bool Client::isIdle(int timeoutSec) const {
-    bool idle = (difftime(time(nullptr), lastActive) > timeoutSec && state == ClientState::AwaitingRequest);
-    if (idle) {
-        logData("web-server-clientidle.log", clientAddr, "Client idle for more than " + std::to_string(timeoutSec) + " seconds.");
-    }
-    return idle;
+    return (difftime(time(nullptr), lastActive) > timeoutSec && state == ClientState::AwaitingRequest);
 }
 
 /**
