@@ -149,6 +149,18 @@ Response handleTrace(const Request& request) {
 }
 
 /**
+ * @brief Handles OPTIONS requests. Returns allowed methods for the resource.
+ * @param request HTTP request
+ * @return HTTP response with Allow header
+ */
+Response handleOptions(const Request& request) {
+    Response response = Response::ok("");
+    response.headers["Allow"] = "GET, POST, PUT, DELETE, HEAD, TRACE, OPTIONS";
+    response.bodyLength = 0;
+    return response;
+}
+
+/**
  * @brief Handles GET /health endpoint.
  * @return Plain text health check response
  */

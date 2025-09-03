@@ -55,3 +55,6 @@ Response handleOk(const std::string& context);
 
 // Returns a 500 Internal Server Error response with a context-aware message.
 Response handleInternalError(const std::string& context);
+
+// Handles OPTIONS requests. Currently returns a 200 OK response with allowed methods.
+Response handleOptions(const Request& request);

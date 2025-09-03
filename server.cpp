@@ -120,6 +120,9 @@ void Server::dispatch(Client& client) {
 	else if (request.method == "TRACE") {
 		response = handleTrace(request);
     }
+    else if (request.method == "OPTIONS") {
+        response = handleOptions(request);
+    }
     else {
         response = handleBadRequest("Unsupported HTTP method");
     }
@@ -206,6 +209,7 @@ void Server::sendMessage(Client& client) {
 
 /**
  * @brief Main server loop: handles connections and client events.
+ * @details Uses select() and non-blocking sockets for non-blocking I/O multiplexing.
  */
 void Server::run() {
     if (listenSocket == INVALID_SOCKET) {

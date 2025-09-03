@@ -643,6 +643,76 @@
           }
         }
       ]
+    },
+    {
+      "name": "OPTIONS / (root)",
+      "request": {
+        "method": "OPTIONS",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": [""]
+        }
+      },
+      "description": "Minimal OPTIONS test for root path",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Allow header present\", function () {",
+              "    pm.expect(pm.response.headers.has(\"Allow\")).to.be.true;",
+              "});",
+              "pm.test(\"Allow header lists methods\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Allow\")).to.include(\"OPTIONS\");",
+              "    pm.expect(pm.response.headers.get(\"Allow\")).to.include(\"GET\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "OPTIONS /data",
+      "request": {
+        "method": "OPTIONS",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/data",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["data"]
+        }
+      },
+      "description": "Minimal OPTIONS test for /data path",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Allow header present\", function () {",
+              "    pm.expect(pm.response.headers.has(\"Allow\")).to.be.true;",
+              "});",
+              "pm.test(\"Allow header lists methods\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Allow\")).to.include(\"OPTIONS\");",
+              "    pm.expect(pm.response.headers.get(\"Allow\")).to.include(\"GET\");",
+              "});"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
