@@ -713,6 +713,207 @@
           }
         }
       ]
+    },
+    {
+      "name": "GET /doesnotexist (404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/doesnotexist",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["doesnotexist"]
+        }
+      },
+      "description": "GET for a non-existent file, should return 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "HEAD /doesnotexist (404)",
+      "request": {
+        "method": "HEAD",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/doesnotexist",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["doesnotexist"]
+        }
+      },
+      "description": "HEAD for a non-existent file, should return 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /doesnotexist (404)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/doesnotexist",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["doesnotexist"]
+        }
+      },
+      "description": "DELETE for a non-existent file, should return 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /echo (unsupported Content-Type)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"test\":123}" },
+        "url": {
+          "raw": "http://localhost:8080/echo",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["echo"]
+        }
+      },
+      "description": "POST /echo with unsupported Content-Type, should return 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /data?foo=bar (query param ignored)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": { "mode": "raw", "raw": "Query param test" },
+        "url": {
+          "raw": "http://localhost:8080/data?foo=bar",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["data"],
+          "query": [{ "key": "foo", "value": "bar" }]
+        }
+      },
+      "description": "PUT with query param, should succeed or ignore param",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 201\", function () {",
+              "    pm.expect([200,201]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /data?foo=bar (query param ignored)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/data?foo=bar",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["data"],
+          "query": [{ "key": "foo", "value": "bar" }]
+        }
+      },
+      "description": "DELETE with query param, should succeed or ignore param",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 404\", function () {",
+              "    pm.expect([200,404]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /about?lang=xx (unsupported lang)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/about?lang=xx",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["about"],
+          "query": [{ "key": "lang", "value": "xx" }]
+        }
+      },
+      "description": "GET with unsupported lang, should fallback or 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 404\", function () {",
+              "    pm.expect([200,404]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
