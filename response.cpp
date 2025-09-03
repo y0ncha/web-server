@@ -26,7 +26,7 @@ Response Response::ok(const std::string& body) {
  * @param body Response body
  * @return Response object
  */
-Response Response::not_found(const std::string& body) {
+Response Response::notFound(const std::string& body) {
     Response response;
     response.statusCode = 404;
     response.statusMessage = "Not Found";
@@ -41,7 +41,7 @@ Response Response::not_found(const std::string& body) {
  * @param body Response body
  * @return Response object
  */
-Response Response::bad_request(const std::string& body) {
+Response Response::badRequest(const std::string& body) {
     Response response;
     response.statusCode = 400;
     response.statusMessage = "Bad Request";
@@ -71,7 +71,7 @@ Response Response::created(const std::string& body) {
  * @param body Response body
  * @return Response object
  */
-Response Response::internal_error(const std::string& body) {
+Response Response::internalError(const std::string& body) {
     Response response;
     response.statusCode = 500;
     response.statusMessage = "Internal Server Error";

@@ -56,9 +56,12 @@ Response handleHead(const Request& request) {
     std::string lang = request.getQparams("lang");
     std::string filePath = resolveFilePath(request.path, lang);
     if (filePath.empty()) {
-        return handleNotFound(request.path);
+		return Response::notFound();
     }
     std::ifstream infile(filePath, std::ios::binary | std::ios::ate);
+    if (!infile.good()) {
+		return Response::notFound();
+    }
     size_t fileSize = infile.tellg();
     infile.close();
 
@@ -225,7 +228,7 @@ std::string resolveFilePath(const std::string& path, const std::string& lang) {
  * @return Not found response
  */
 Response handleNotFound(const std::string& context) {
-    return Response::not_found("Path not found: " + context);
+    return Response::notFound("Path not found: " + context);
 }
 
 /**
@@ -234,7 +237,7 @@ Response handleNotFound(const std::string& context) {
  * @return Bad request response
  */
 Response handleBadRequest(const std::string& context) {
-    return Response::bad_request("Bad request: " + context);
+    return Response::badRequest("Bad request: " + context);
 }
 
 /**
@@ -261,7 +264,7 @@ Response handleOk(const std::string& context) {
  * @return Internal error response
  */
 Response handleInternalError(const std::string& context) {
-    return Response::internal_error("Internal error: " + context);
+    return Response::internalError("Internal error: " + context);
 }
 
 /**

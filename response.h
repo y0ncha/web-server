@@ -23,18 +23,18 @@ class Response {
     // Constructs a Response with default values
     Response();
 
-	// Default presets :
+	// Factory methods for common responses
     // 
     // Creates a 200 OK response with body
     static Response ok(const std::string& body = "");
     // Creates a 404 Not Found response
-    static Response not_found(const std::string& body = "");
+    static Response notFound(const std::string& body = "");
     // Creates a 400 Bad Request response
-    static Response bad_request(const std::string& body = "");
+    static Response badRequest(const std::string& body = "");
     // Creates a 201 Created response with body
     static Response created(const std::string& body = "");
     // Creates a 500 Internal Server Error response with body
-    static Response internal_error(const std::string& body = "");
+    static Response internalError(const std::string& body = "");
     // Converts the response to a raw HTTP string
 
 
