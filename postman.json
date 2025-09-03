@@ -878,8 +878,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 200 or 404\", function () {",
-              "    pm.expect([200,404]).to.include(pm.response.code);",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.expect(200).to.include(pm.response.code);",
               "});"
             ]
           }
@@ -900,15 +900,15 @@
           "query": [{ "key": "lang", "value": "xx" }]
         }
       },
-      "description": "GET with unsupported lang, should fallback or 404",
+      "description": "GET with unsupported lang, should fallback to english",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 200 or 404\", function () {",
-              "    pm.expect([200,404]).to.include(pm.response.code);",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.expect(200).to.include(pm.response.code);",
               "});"
             ]
           }
