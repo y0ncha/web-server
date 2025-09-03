@@ -10,6 +10,7 @@
 #include "request.h"
 #include "response.h"
 #include <sstream>
+#include <ctime>
 
 static constexpr size_t BUFF_SIZE = 1024; // 4KB max buffer size
 

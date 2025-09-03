@@ -1,5 +1,4 @@
 #include "client.h"
-#include <ctime>
 
 /**
  * @brief Constructs a client with socket and address.

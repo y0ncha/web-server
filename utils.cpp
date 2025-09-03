@@ -1,6 +1,4 @@
 #include "utils.h"
-#include <algorithm>
-#include <cctype>
 
 /**
  * @brief Trims whitespace from both ends of a string

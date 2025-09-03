@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+#include "utils.h"
 
 /**
  * @brief Represents an HTTP request and provides utilities for parsing and accessing its components.
