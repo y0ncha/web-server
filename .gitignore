@@ -366,5 +366,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+# MacOs
+.DS_Store
+
 # Ignore the documents folder
 documents/	
