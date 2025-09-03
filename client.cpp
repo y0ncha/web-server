@@ -1,4 +1,19 @@
 #include "client.h"
+#include "utils.h"
+#include <ctime>
+
+// Helper to convert ClientState to string
+static std::string clientStateToString(ClientState state) {
+    switch (state) {
+        case ClientState::Disconnected: return "Disconnected";
+        case ClientState::AwaitingRequest: return "AwaitingRequest";
+        case ClientState::RequestBuffered: return "RequestBuffered";
+        case ClientState::ResponseReady: return "ResponseReady";
+        case ClientState::Completed: return "Completed";
+        case ClientState::Aborted: return "Aborted";
+        default: return "Unknown";
+    }
+}
 
 /**
  * @brief Constructs a client with socket and address.
@@ -33,52 +48,58 @@ Client::~Client() {}
  * @brief Sets client state to Disconnected.
  */
 void Client::setDisconnected() {
+    std::string oldState = clientStateToString(state);
     state = ClientState::Disconnected;
-    std::cout << "Client [" << clientAddr << "] state changed to Disconnected\n";
+    logClientState(clientAddr, oldState, clientStateToString(state));
 }
 
 /**
  * @brief Sets client state to AwaitingRequest.
  */
 void Client::setAwaitingRequest() {
+    std::string oldState = clientStateToString(state);
     lastActive = time(nullptr);
     state = ClientState::AwaitingRequest;
-    std::cout << "Client [" << clientAddr << "] state changed to AwaitingRequest\n";
+    logClientState(clientAddr, oldState, clientStateToString(state));
 }
 
 /**
  * @brief Sets client state to RequestBuffered.
  */
 void Client::setRequestBuffered() {
+    std::string oldState = clientStateToString(state);
     lastActive = time(nullptr);
     state = ClientState::RequestBuffered;
-    std::cout << "Client [" << clientAddr << "] state changed to RequestBuffered\n";
+    logClientState(clientAddr, oldState, clientStateToString(state));
 }
 
 /**
  * @brief Sets client state to ResponseReady.
  */
 void Client::setResponseReady() {
+    std::string oldState = clientStateToString(state);
     state = ClientState::ResponseReady;
-    std::cout << "Client [" << clientAddr << "] state changed to ResponseReady\n";
+    logClientState(clientAddr, oldState, clientStateToString(state));
 }
 
 /**
  * @brief Sets client state to Completed.
  */
 void Client::setCompleted() {
+    std::string oldState = clientStateToString(state);
     inBuffer.clear();
     outBuffer.clear();
     state = ClientState::Completed;
-    std::cout << "Client [" << clientAddr << "] state changed to Completed\n";
+    logClientState(clientAddr, oldState, clientStateToString(state));
 }
 
 /**
  * @brief Sets client state to Aborted.
  */
 void Client::setAborted() {
+    std::string oldState = clientStateToString(state);
     state = ClientState::Aborted;
-    std::cout << "Client [" << clientAddr << "] state changed to Aborted\n";
+    logClientState(clientAddr, oldState, clientStateToString(state));
 }
 
 /**
@@ -87,7 +108,11 @@ void Client::setAborted() {
  * @return True if idle, false otherwise
  */
 bool Client::isIdle(int timeoutSec) const {
-    return (difftime(time(nullptr), lastActive) > timeoutSec && state == ClientState::AwaitingRequest);
+    bool idle = (difftime(time(nullptr), lastActive) > timeoutSec && state == ClientState::AwaitingRequest);
+    if (idle) {
+        logData("web-server-clientidle.log", clientAddr, "Client idle for more than " + std::to_string(timeoutSec) + " seconds.");
+    }
+    return idle;
 }
 
 /**

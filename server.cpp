@@ -1,4 +1,6 @@
 #include "server.h"
+#include "utils.h"
+#include <fstream>
 
 /**
  * @brief Server constructor: initializes Winsock and sets up the listening socket.
@@ -11,13 +13,14 @@ Server::Server(const std::string& ip, int port, std::size_t bufferSize)
 {
     WSAData wsaData;
     if (NO_ERROR != WSAStartup(MAKEWORD(2, 2), &wsaData)) {
-        reportError("Error at WSAStartup()", 0);
+        logError("Error at WSAStartup()", WSAGetLastError());
         listenSocket = INVALID_SOCKET;
         return;
     }
     listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (INVALID_SOCKET == listenSocket) {
-        reportError("Error at socket()", 1);
+        logError("Error at socket()", WSAGetLastError());
+        WSACleanup();
         return;
     }
     sockaddr_in serverService;
@@ -25,7 +28,8 @@ Server::Server(const std::string& ip, int port, std::size_t bufferSize)
     serverService.sin_addr.s_addr = inet_addr(ip_.c_str());
     serverService.sin_port = htons(port_);
     if (SOCKET_ERROR == bind(listenSocket, (SOCKADDR*)&serverService, sizeof(serverService))) {
-        reportError("Error at bind()", 1);
+        logError("Error at bind()", WSAGetLastError());
+        WSACleanup();
         return;
     }
 }
@@ -42,23 +46,7 @@ Server::~Server() {
         closesocket(listenSocket);
     }
     WSACleanup();
-    std::cout << "Web Server: Closing Connection.\n";
-}
-
-/**
- * @brief Reports an error and optionally cleans up Winsock.
- * @param message Error message
- * @param cleanupWSA Whether to cleanup Winsock
- */
-void Server::reportError(const std::string& message, bool cleanupWSA) {
-    std::cerr << "Web Server: " << message << " Error: " << WSAGetLastError() << std::endl;
-    if (listenSocket != INVALID_SOCKET) {
-        closesocket(listenSocket);
-        listenSocket = INVALID_SOCKET;
-    }
-    if (cleanupWSA) {
-        WSACleanup();
-    }
+    // Ensure all log files are closed (handled by ofstream destructors)
 }
 
 /**
@@ -67,12 +55,14 @@ void Server::reportError(const std::string& message, bool cleanupWSA) {
  */
 bool Server::listen() {
     if (SOCKET_ERROR == ::listen(listenSocket, 5)) {
-        reportError("Error at listen()", true);
+        logError("Error at listen()", WSAGetLastError());
+        WSACleanup();
         return false;
     }
     unsigned long flag = 1;
     if (ioctlsocket(listenSocket, FIONBIO, &flag) != NO_ERROR) {
-        reportError("Error at ioctlsocket()", true);
+        logError("Error at ioctlsocket()", WSAGetLastError());
+        WSACleanup();
         return false;
     }
     return true;
@@ -99,7 +89,8 @@ bool Server::addClient(SOCKET clientSocket, const sockaddr_in& addr) {
         closesocket(clientSocket);
         return false;
     }
-    std::cout << "Client [" << result.first->second.clientAddr << "] connected.\n";
+    // Log client connection to client state log file
+    logClientState(result.first->second.clientAddr, "None", "Connected");
     return true;
 }
 
@@ -138,7 +129,7 @@ void Server::acceptConnection() {
     int fromLen = sizeof(from);
     SOCKET clientSocket = accept(listenSocket, (sockaddr*)&from, &fromLen);
     if (INVALID_SOCKET == clientSocket) {
-        reportError("Error at accept()", 0);
+        logError("Error at accept()", WSAGetLastError());
         return;
     }
     if (addClient(clientSocket, from)) {
@@ -152,13 +143,13 @@ void Server::acceptConnection() {
  */
 void Server::receiveMessage(Client& client) {
     if (client.state != ClientState::AwaitingRequest) {
-        reportError("receiveMessage called in invalid client state", false);
+        logError("receiveMessage called in invalid client state", WSAGetLastError());
     }
     std::string recvBuffer(BUFF_SIZE, '\0');
     int bytesRecv = recv(client.socket, &recvBuffer[0], static_cast<int>(recvBuffer.size() - 1), 0);
     if (SOCKET_ERROR == bytesRecv) {
         client.setAborted();
-        reportError("Error at recv()", false);
+        logError("Error at recv()", WSAGetLastError());
         closesocket(client.socket);
         return;
     }
@@ -169,14 +160,14 @@ void Server::receiveMessage(Client& client) {
     }
     recvBuffer.resize(bytesRecv);
     client.inBuffer.append(recvBuffer);
+    // Log received data with timestamp
+    logData("web-server-received.log", client.clientAddr, recvBuffer);
     // If incomplete request, keep buffering
     if (!isRequestComplete(recvBuffer)) {
-        std::cout << "Web Server: Received " << bytesRecv << " bytes (partial). Total buffered: "
-            << client.inBuffer.size() << " bytes.\n";
+        // No console output, just log
         return;
     }
     client.setRequestBuffered();
-    std::cout << "Web Server: Received " << bytesRecv << " bytes\n";
 }
 
 /**
@@ -185,23 +176,24 @@ void Server::receiveMessage(Client& client) {
  */
 void Server::sendMessage(Client& client) {
     if (client.state != ClientState::ResponseReady || client.outBuffer.empty()) {
-        reportError("sendMessage called in invalid state or empty buffer", false);
+        logError("sendMessage called in invalid state or empty buffer", WSAGetLastError());
         return;
     }
     int bytesSent = send(client.socket, client.outBuffer.c_str(), (int)client.outBuffer.size(), 0);
     if (SOCKET_ERROR == bytesSent) {
         client.setAborted();
-        reportError("Error at send()", false);
+        logError("Error at send()", WSAGetLastError());
         closesocket(client.socket);
         return;
     }
+    // Log sent data with timestamp
+    std::string sentData = client.outBuffer.substr(0, bytesSent);
+    logData("web-server-sent.log", client.clientAddr, sentData);
     if (bytesSent < client.outBuffer.size()) {
         client.outBuffer = client.outBuffer.substr(bytesSent);
-        std::cout << "Web Server: Sent " << bytesSent << " bytes (partial). Remaining: "
-            << client.outBuffer.size() - bytesSent << " bytes.\n";
+        // No console output, just log
         return;
     }
-    std::cout << "Web Server: Sent " << bytesSent << "/" << client.outBuffer.size() << " bytes of response.\n";
     client.outBuffer.clear();
     client.keepAlive ? client.setAwaitingRequest() : client.setCompleted();
 }
@@ -211,18 +203,20 @@ void Server::sendMessage(Client& client) {
  */
 void Server::run() {
     if (listenSocket == INVALID_SOCKET) {
-        reportError("Initialization failed", false);
+        logError("Initialization failed", WSAGetLastError());
         return;
     }
     if (!listen()) {
-        reportError("Listen failed", true);
+        logError("Listen failed", WSAGetLastError());
+        WSACleanup();
         return;
     }
     std::cout << "Server is running, waiting for connections...\n";
     while (true) {
         fd_set readfds, writefds;
         if (!pollEvents(readfds, writefds)) {
-            reportError("Polling events failed", true);
+            logError("Polling events failed", WSAGetLastError());
+            WSACleanup();
             return;
         }
         if (FD_ISSET(listenSocket, &readfds)) {
@@ -272,7 +266,7 @@ bool Server::pollEvents(fd_set& readfds, fd_set& writefds) {
     prepareFdSets(readfds, writefds);
     int nfd = select(0, &readfds, &writefds, NULL, NULL);
     if (nfd == SOCKET_ERROR) {
-        reportError("Error at select()", false);
+        logError("Error at select()", WSAGetLastError());
         return false;
     }
     return true;
