@@ -632,6 +632,41 @@
           }
         }
       ]
+    },
+    {
+      "name": "TRACE /trace (custom header, with body)",
+      "request": {
+        "method": "TRACE",
+        "header": [{ "key": "X-Test-Header", "value": "TraceValue" }],
+        "body": { "mode": "raw", "raw": "Trace body content" },
+        "url": {
+          "raw": "http://localhost:8080/trace",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["trace"]
+        }
+      },
+      "description": "Test echoing with headers and body",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Body contains custom header\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"X-Test-Header: TraceValue\");",
+              "});",
+              "pm.test(\"Body contains trace body content\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"Trace body content\");",
+              "});"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
