@@ -2,26 +2,175 @@
 
 
 /**
- * @brief Handles GET requests by dispatching to the appropriate handler based on the path.
+ * @brief Handles GET requests for files with language support and /health endpoint.
  * @param request HTTP request
  * @return HTTP response
  */
 Response handleGet(const Request& request) {
-
-	if (request.path == "/health") { // Health check endpoint
+    if (request.path == "/health") {
         return health();
-    } 
-	else {
-        return fetchHtmlFile(request);
-    } 
+    }
+    std::string lang = request.getQparams("lang");
+    std::string filePath = resolveFilePath(request.path, lang);
+    if (filePath.empty()) {
+        Response response = Response::not_found();
+        response.body = "File not found";
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
+    }
+    std::ifstream infile(filePath);
+    if (!infile.good()) {
+        Response response = Response::not_found();
+        response.body = "File not found";
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
+    }
+    std::ostringstream ss;
+    ss << infile.rdbuf();
+    infile.close();
+
+    Response response = Response::ok(ss.str());
+    // Set content type based on extension
+    if (filePath.size() >= 5 && filePath.substr(filePath.size() - 5) == ".html") {
+        response.headers["Content-Type"] = "text/html";
+    } else {
+        response.headers["Content-Type"] = "text/plain";
+    }
+    response.bodyLength = response.body.size();
+    return response;
 }
 
+/**
+ * @brief Handles POST requests. Only supports /echo endpoint.
+ * @param request HTTP request
+ * @return HTTP response
+ */
 Response handlePost(const Request& request) {
-    if (request.path == "/echo") { // Echo endpoint
-        return echo(request);
-    } 
-    else {
-        return handleBadRequest("Unsupported POST endpoint");
+    if (request.path != "/echo") {
+        return handleBadRequest("POST only supported on /echo");
+    }
+    std::cout << "[POST] Received body: \"" << request.body << "\"\n";
+    return Response::ok(request.body);
+}
+
+/**
+ * @brief Handles HEAD requests for files with language support.
+ * @param request HTTP request
+ * @return HTTP response with headers only
+ */
+Response handleHead(const Request& request) {
+    std::string lang = request.getQparams("lang");
+    std::string filePath = resolveFilePath(request.path, lang);
+    if (filePath.empty()) {
+        Response response = Response::not_found();
+        response.body = "File not found";
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
+    }
+    std::ifstream infile(filePath);
+    if (!infile.good()) {
+        Response response = Response::not_found();
+        response.body = "File not found";
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
+    }
+    infile.close();
+
+    Response response = Response::ok("");
+    // Set content type based on extension
+    if (filePath.size() >= 5 && filePath.substr(filePath.size() - 5) == ".html") {
+        response.headers["Content-Type"] = "text/html";
+    } else {
+        response.headers["Content-Type"] = "text/plain";
+    }
+    response.body.clear(); // No body for HEAD
+    response.bodyLength = 0;
+    return response;
+}
+
+/**
+ * @brief Handles PUT requests by writing the request body to a .txt file.
+ * @param request HTTP request
+ * @return HTTP response
+ */
+Response handlePut(const Request& request) {
+    std::string filePath = resolveFilePath(request.path, "");
+    // Only allow .txt files for PUT
+    if (filePath.empty() || filePath.size() < 4 || filePath.substr(filePath.size() - 4) != ".txt") {
+        return handleBadRequest("Invalid or missing path for PUT");
+    }
+    bool fileExists = false;
+    {
+        std::ifstream infile(filePath);
+        fileExists = infile.good();
+    }
+    try {
+        std::ofstream outfile(filePath, std::ios::trunc);
+        if (!outfile.is_open()) {
+            return Response::bad_request();
+        }
+        outfile << request.body;
+        outfile.close();
+    } catch (...) {
+        Response response;
+        response.statusCode = 500;
+        response.statusMessage = "Internal Server Error";
+        response.body = "Error writing file";
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
+    }
+    Response response;
+    if (fileExists) {
+        response = Response::ok("File overwritten: " + filePath.substr(filePath.find_last_of("\\/") + 1));
+    } else {
+        response.statusCode = 201;
+        response.statusMessage = "Created";
+        response.body = "File created: " + filePath.substr(filePath.find_last_of("\\/") + 1);
+        response.bodyLength = response.body.size();
+    }
+    response.headers["Content-Type"] = "text/plain";
+    return response;
+}
+
+/**
+ * @brief Handles DELETE requests by deleting the .txt file derived from the path.
+ * @param request HTTP request
+ * @return HTTP response
+ */
+Response handleDelete(const Request& request) {
+    std::string filePath = resolveFilePath(request.path, "");
+    // Only allow .txt files for DELETE
+    if (filePath.empty() || filePath.size() < 4 || filePath.substr(filePath.size() - 4) != ".txt") {
+        return handleBadRequest("Invalid or missing path for DELETE");
+    }
+    std::ifstream infile(filePath);
+    if (!infile.good()) {
+        Response response = Response::not_found();
+        response.body = "File not found";
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
+    }
+    infile.close();
+
+    if (std::remove(filePath.c_str()) == 0) {
+        Response response = Response::ok("File deleted: " + filePath.substr(filePath.find_last_of("\\/") + 1));
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
+    } else {
+        Response response;
+        response.statusCode = 500;
+        response.statusMessage = "Internal Server Error";
+        response.body = "Error deleting file";
+        response.headers["Content-Type"] = "text/plain";
+        response.bodyLength = response.body.size();
+        return response;
     }
 }
 
@@ -36,29 +185,21 @@ Response health() {
 }
 
 /**
- * @brief Handles GET /echo?msg=... endpoint.
- * @param request HTTP request
- * @return Echoed message or bad request response if missing
- */
-Response echo(const Request& request) {
-
-	std::string message = request.body;
-    Response response;
-
-    std::cout << "[POST] Received body: \"" << request.body << "\"\n";
-    response = Response::ok(message);
-
-    return response;
-}
-
-/**
- * @brief Resolves the file path for static HTML serving based on path and language.
+ * @brief Resolves the file path for static HTML or text serving based on path and language.
  * @param path Request path
- * @param lang Language code
- * @return Resolved file path or empty string if not found
+ * @param lang Language code (e.g., "en", "fr")
+ * @return Resolved file path or empty string if not found or invalid
  */
 std::string resolveFilePath(const std::string& path, const std::string& lang) {
-    std::string baseName = path == "/" ? "index" : path.substr(1); // remove leading '/'
+    std::string baseName;
+    if (!isValidPutPath(path, baseName) && path != "/") {
+        return "";
+    }
+    // Special case for root "/"
+    if (path == "/") {
+        baseName = "index";
+    }
+
     std::string dir = "C:\\temp\\";
     std::string filePath;
 
@@ -66,7 +207,7 @@ std::string resolveFilePath(const std::string& path, const std::string& lang) {
     if (!lang.empty()) {
         filePath = dir + baseName + "." + lang + ".html";
         std::ifstream fileLang(filePath);
-        if (fileLang.good()) {
+        if (fileLang.good()) {  
             return filePath;
         }
     }
@@ -76,40 +217,19 @@ std::string resolveFilePath(const std::string& path, const std::string& lang) {
     if (fileEn.good()) {
         return filePath;
     }
-    // Fallback to generic
+    // Fallback to generic HTML
     filePath = dir + baseName + ".html";
     std::ifstream fileGeneric(filePath);
     if (fileGeneric.good()) {
         return filePath;
     }
+    // Fallback to .txt (for text file endpoints)
+    filePath = dir + baseName + ".txt";
+    std::ifstream fileTxt(filePath);
+    if (fileTxt.good()) {
+        return filePath;
+    }
     return "";
-}
-
-/**
- * @brief Handles GET for HTML file endpoints (/, /about, /faq, etc.).
- * @param request HTTP request
- * @return File contents or not found response
- */
-Response fetchHtmlFile(const Request& request) {
-    std::string lang = request.getQparams("lang");
-    std::string filePath = resolveFilePath(request.path, lang);
-
-    if (filePath.empty()) {
-        std::ostringstream ss;
-        ss << "File not found for path " << request.path;
-        return handleNotFound(ss.str());
-    }
-    std::ifstream file(filePath);
-    if (!file.is_open()) {
-        std::ostringstream ss;
-        ss << "File could not be opened " << filePath;
-        return handleNotFound(ss.str());
-    }
-    std::ostringstream ss;
-    ss << file.rdbuf();
-    Response response = Response::ok(ss.str());
-    response.headers["Content-Type"] = "text/html";
-    return response;
 }
 
 /**
@@ -122,6 +242,7 @@ Response handleNotFound(const std::string& error) {
     if (!error.empty()) {
         response.body += " : ";
         response.body += error;
+		response.bodyLength = response.body.size();
     }
     return response;
 }
@@ -136,6 +257,7 @@ Response handleBadRequest(const std::string& error) {
     if (!error.empty()) {
         response.body += " : ";
         response.body += error;
+		response.bodyLength = response.body.size();
     }
     return response;
 }

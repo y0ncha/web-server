@@ -17,6 +17,8 @@ class Response {
     std::map<std::string, std::string> headers;
     // Response body
     std::string body;
+	// Body length
+	size_t bodyLength;
 
     // Constructs a Response with default values
     Response();
