@@ -138,6 +138,7 @@ Response handleNotFound(const std::string& error) {
     if (!error.empty()) {
         response.body += " : ";
         response.body += error;
+		response.bodyLength = response.body.size();
     }
     return response;
 }
@@ -152,6 +153,7 @@ Response handleBadRequest(const std::string& error) {
     if (!error.empty()) {
         response.body += " : ";
         response.body += error;
+		response.bodyLength = response.body.size();
     }
     return response;
 }
