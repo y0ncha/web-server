@@ -103,7 +103,7 @@ void Server::dispatch(Client& client) {
     Response response;
 
     if (request.method == "GET") {
-		response = request.path == "health" ? health() : handleGet(request);
+		response = handleGet(request);
     }
     else if (request.method == "POST") {
         response = handlePost(request);
@@ -117,6 +117,12 @@ void Server::dispatch(Client& client) {
     else if (request.method == "DELETE") {
 		response = handleDelete(request);
 	}
+	else if (request.method == "TRACE") {
+		response = handleTrace(request);
+    }
+    else if (request.method == "OPTIONS") {
+        response = handleOptions(request);
+    }
     else {
         response = handleBadRequest("Unsupported HTTP method");
     }
@@ -203,6 +209,7 @@ void Server::sendMessage(Client& client) {
 
 /**
  * @brief Main server loop: handles connections and client events.
+ * @details Uses select() and non-blocking sockets for non-blocking I/O multiplexing.
  */
 void Server::run() {
     if (listenSocket == INVALID_SOCKET) {
