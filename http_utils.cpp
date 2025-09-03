@@ -1,123 +1,179 @@
 ﻿#include "http_utils.h"
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <iostream>
 
-Response handle_health() {
-    Response res = Response::ok("Computer Networks Web Server Assignment");
-    res.headers["Content-Type"] = "text/plain";
-    return res;
+/**
+ * @brief Handles GET /health endpoint.
+ * @return Plain text health check response
+ */
+Response handleHealth() {
+    Response response = Response::ok("Computer Networks Web Server Assignment");
+    response.headers["Content-Type"] = "text/plain";
+    return response;
 }
 
-Response handle_echo(const Request& req) {
-    std::string msg = req.getQparams("msg");
-	Response res;
-    if (msg.empty()) {
-		res = handle_bad_request("Missing 'msg' query parameter");
-        return res;
+/**
+ * @brief Handles GET /echo?msg=... endpoint.
+ * @param request HTTP request
+ * @return Echoed message or bad request response if missing
+ */
+Response handleEcho(const Request& request) {
+    std::string message = request.getQparams("msg");
+    Response response;
+    if (message.empty()) {
+        response = handleBadRequest("Missing 'msg' query parameter");
+        return response;
     }
-    res = Response::ok(msg);
-    res.headers["Content-Type"] = "text/plain";
-    return res;
+    response = Response::ok(message);
+    response.headers["Content-Type"] = "text/plain";
+    return response;
 }
 
-std::string resolve_file_path(const std::string& path, const std::string& lang) {
-    std::string base_name = path == "/" ? "index" : path.substr(1); // remove leading '/'
+/**
+ * @brief Resolves the file path for static HTML serving based on path and language.
+ * @param path Request path
+ * @param lang Language code
+ * @return Resolved file path or empty string if not found
+ */
+std::string resolveFilePath(const std::string& path, const std::string& lang) {
+    std::string baseName = path == "/" ? "index" : path.substr(1); // remove leading '/'
     std::string dir = "C:\\temp\\";
-    std::string file_path;
+    std::string filePath;
 
     // Try lang-specific file
     if (!lang.empty()) {
-        file_path = dir + base_name + "." + lang + ".html";
-        std::ifstream f1(file_path);
-        if (f1.good()) return file_path;
+        filePath = dir + baseName + "." + lang + ".html";
+        std::ifstream fileLang(filePath);
+        if (fileLang.good()) {
+            return filePath;
+        }
     }
     // Fallback to English
-    file_path = dir + base_name + ".en.html";
-    std::ifstream f2(file_path);
-    if (f2.good()) return file_path;
+    filePath = dir + baseName + ".en.html";
+    std::ifstream fileEn(filePath);
+    if (fileEn.good()) {
+        return filePath;
+    }
     // Fallback to generic
-    file_path = dir + base_name + ".html";
-    std::ifstream f3(file_path);
-    if (f3.good()) return file_path;
+    filePath = dir + baseName + ".html";
+    std::ifstream fileGeneric(filePath);
+    if (fileGeneric.good()) {
+        return filePath;
+    }
     return "";
 }
 
-Response handle_html_file(const Request& req) {
-    std::string lang = req.getQparams("lang");
-    std::string file_path = resolve_file_path(req.path, lang);
-    if (file_path.empty()) {
+/**
+ * @brief Handles GET for HTML file endpoints (/, /about, /faq, etc.).
+ * @param request HTTP request
+ * @return File contents or not found response
+ */
+Response handleHtmlFile(const Request& request) {
+    std::string lang = request.getQparams("lang");
+    std::string filePath = resolveFilePath(request.path, lang);
+    if (filePath.empty()) {
         std::ostringstream ss;
-        ss << "File not found for path " << req.path;
-        return handle_not_found(ss.str());
+        ss << "File not found for path " << request.path;
+        return handleNotFound(ss.str());
     }
-    std::ifstream file(file_path);
+    std::ifstream file(filePath);
     if (!file.is_open()) {
         std::ostringstream ss;
-        ss << "File could not be opened " << file_path;
-        return handle_not_found(ss.str());
+        ss << "File could not be opened " << filePath;
+        return handleNotFound(ss.str());
     }
     std::ostringstream ss;
     ss << file.rdbuf();
-    Response res = Response::ok(ss.str());
-    res.headers["Content-Type"] = "text/html";
-    return res;
+    Response response = Response::ok(ss.str());
+    response.headers["Content-Type"] = "text/html";
+    return response;
 }
 
-Response handle_not_found(const std::string& error) {
-    Response res = Response::not_found();
+/**
+ * @brief Returns a 404 Not Found response, optionally with an error message.
+ * @param error Error message
+ * @return Not found response
+ */
+Response handleNotFound(const std::string& error) {
+    Response response = Response::not_found();
     if (!error.empty()) {
-        res.body += " : ";
-        res.body += error;
+        response.body += " : ";
+        response.body += error;
     }
-    return res;
+    return response;
 }
 
-Response handle_bad_request(const std::string& error) {
-    Response res = Response::bad_request();
+/**
+ * @brief Returns a 400 Bad Request response, optionally with an error message.
+ * @param error Error message
+ * @return Bad request response
+ */
+Response handleBadRequest(const std::string& error) {
+    Response response = Response::bad_request();
     if (!error.empty()) {
-        res.body += " : ";
-        res.body += error;
+        response.body += " : ";
+        response.body += error;
     }
-	return res;
+    return response;
 }
 
-size_t get_content_length(const std::string& raw_headers) {
-    size_t cl_pos = raw_headers.find("Content-Length:");
-    if (cl_pos == std::string::npos) return 0;
-    size_t cl_end = raw_headers.find("\r\n", cl_pos);
-    if (cl_end == std::string::npos) return 0;
-    std::string cl_val = raw_headers.substr(cl_pos + 15, cl_end - (cl_pos + 15));
-    cl_val.erase(std::remove_if(cl_val.begin(), cl_val.end(), ::isspace), cl_val.end());
+/**
+ * @brief Extracts Content-Length value from HTTP headers, or returns 0 if not found or invalid.
+ * @param rawHeaders Raw HTTP headers string
+ * @return Content-Length value
+ */
+size_t getContentLength(const std::string& rawHeaders) {
+    size_t clPos = rawHeaders.find("Content-Length:");
+    if (clPos == std::string::npos) {
+        return 0;
+    }
+    size_t clEnd = rawHeaders.find("\r\n", clPos);
+    if (clEnd == std::string::npos) {
+        return 0;
+    }
+    std::string clVal = rawHeaders.substr(clPos + 15, clEnd - (clPos + 15));
+    clVal.erase(std::remove_if(clVal.begin(), clVal.end(), ::isspace), clVal.end());
     try {
-        return std::stoul(cl_val);
-    }
-    catch (...) {
+        return std::stoul(clVal);
+    } catch (...) {
         return 0;
     }
 }
 
-bool is_request_complete(const std::string& buffer) {
-    size_t header_end = buffer.find("\r\n\r\n"); // FIXED
-    if (header_end == std::string::npos) return false;
-    size_t content_length = get_content_length(buffer.substr(0, header_end));
-    size_t body_start = header_end + 4;
-    size_t body_len = buffer.size() - body_start;
-    if ((content_length == 0 && body_len == 0) || (content_length > 0 && body_len >= content_length)) {
+/**
+ * @brief Checks if the HTTP request in buffer is complete (headers and body).
+ * @param buffer Raw HTTP request buffer
+ * @return True if request is complete, false otherwise
+ */
+bool isRequestComplete(const std::string& buffer) {
+    size_t headerEnd = buffer.find("\r\n\r\n");
+    if (headerEnd == std::string::npos) {
+        return false;
+    }
+    size_t contentLength = getContentLength(buffer.substr(0, headerEnd));
+    size_t bodyStart = headerEnd + 4;
+    size_t bodyLen = buffer.size() - bodyStart;
+    if ((contentLength == 0 && bodyLen == 0) || (contentLength > 0 && bodyLen >= contentLength)) {
         return true;
     }
     return false;
 }
 
-bool is_keep_alive(const Request& req) {
-    auto conn_it = req.headers.find("Connection");
-    if (conn_it != req.headers.end()) {
-        std::string conn_val = conn_it->second;
-        std::transform(conn_val.begin(), conn_val.end(), conn_val.begin(), ::tolower);
-        if (conn_val == "keep-alive") return true;
-        if (conn_val == "close") return false;
+/**
+ * @brief Checks if the connection should be kept alive based on headers and HTTP version.
+ * @param request HTTP request
+ * @return True if keep-alive, false otherwise
+ */
+bool isKeepAlive(const Request& request) {
+    auto connIt = request.headers.find("Connection");
+    if (connIt != request.headers.end()) {
+        std::string connVal = connIt->second;
+        std::transform(connVal.begin(), connVal.end(), connVal.begin(), ::tolower);
+        if (connVal == "keep-alive") {
+            return true;
+        }
+        if (connVal == "close") {
+            return false;
+        }
     }
     // Default to HTTP/1.1 keep-alive, HTTP/1.0 close
-    return req.version == "HTTP/1.1";
+    return request.version == "HTTP/1.1";
 }

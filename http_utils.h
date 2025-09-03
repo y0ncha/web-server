@@ -8,25 +8,29 @@
 #include <iostream>
 #include <vector>
 
-// Handler for GET /health
-Response handle_health();
-// Handler for GET /echo?msg=...
-Response handle_echo(const Request& req);
-// Handler for GET /, /about, /faq, etc. (serves HTML files)
-Response handle_html_file(const Request& req);
-// Fallback handler for 404 Not Found
-Response handle_not_found(const std::string& error = "");
-// Fallback handler for 400 Bad Request
-Response handle_bad_request(const std::string& error = "");
+// Handles GET /health endpoint. Returns a plain text health check response.
+Response handleHealth();
 
-// Helper: resolve file path for static HTML serving
-std::string resolve_file_path(const std::string& path, const std::string& lang);
+// Handles GET /echo?msg=... endpoint. Returns the echoed message or a bad request response if missing.
+Response handleEcho(const Request& request);
 
-// Helper: check if HTTP request is complete
-bool is_request_complete(const std::string& buffer);
+// Handles GET for HTML file endpoints (/, /about, /faq, etc.). Returns the file contents or a not found response.
+Response handleHtmlFile(const Request& request);
 
-// Helper: check if connection should be kept alive
-bool is_keep_alive(const Request& req);
+// Returns a 404 Not Found response, optionally with an error message.
+Response handleNotFound(const std::string& error = "");
 
-// Returns Content-Length value from HTTP headers, or 0 if not found
-size_t get_content_length(const std::string& raw_headers);
+// Returns a 400 Bad Request response, optionally with an error message.
+Response handleBadRequest(const std::string& error = "");
+
+// Resolves the file path for static HTML serving based on path and language.
+std::string resolveFilePath(const std::string& path, const std::string& lang);
+
+// Checks if the HTTP request in buffer is complete (headers and body).
+bool isRequestComplete(const std::string& buffer);
+
+// Checks if the connection should be kept alive based on headers and HTTP version.
+bool isKeepAlive(const Request& request);
+
+// Extracts Content-Length value from HTTP headers, or returns 0 if not found or invalid.
+size_t getContentLength(const std::string& rawHeaders);

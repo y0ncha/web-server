@@ -10,6 +10,7 @@ This is a C++ educational project implementing a TCP non-blocking, single-thread
 - **CRITICAL**: This project is Windows-specific and uses Winsock2 APIs
 - **Cannot build on Linux/macOS** without cross-compilation tools
 - Original design targets Visual Studio on Windows
+- **CRITICAL** When asked to document or comment use coding format guilinelines below and do not change code logic.
 
 ### Cross-Platform Development Setup
 For development on Linux (required for this environment):
@@ -90,7 +91,7 @@ For development on Linux (required for this environment):
 - **Minimal HTTP implementation** - basic GET requests only
 - **Single-recv assumption**: Code assumes complete HTTP request fits in one recv() call (simplified for educational purposes)
 - **No SSL/TLS support**
-- **Hardcoded configuration**: IP (127.0.0.1), Port (8080), buffer sizes (512 bytes), timeouts (120 seconds)
+- **Hardcoded configuration**: IP (127.0.0.1), Port (8080), buffer sizes (1024 bytes), timeouts (120 seconds)
 
 ### File Modification Guidelines
 - **Never modify** .vcxproj/.sln files unless adding/removing source files
@@ -140,3 +141,57 @@ Expected output: PE32+ executable for MS Windows, approximately 390KB in size.
 ```
 
 **Remember**: This is Windows-specific educational code. Do not attempt to port to POSIX sockets as it changes the learning objectives around Windows networking APIs.
+
+
+## Code Formatting Guidelines
+
+To ensure readability, maintainability, and consistency across all source files, follow these conventions throughout the project:
+
+### Naming Conventions
+
+| Element            | Format           | Example                          |
+|--------------------|------------------|----------------------------------|
+| Classes / Structs  | PascalCase       | HttpRequest, Client              |
+| Functions          | camelCase        | handleFileRequest(), resolveFilePath() |
+| Member Variables   | camelCase        | clientSocket, inBuffer           |
+| Local Variables    | camelCase        | filePath, lang                   |
+| Constants / Macros | UPPER_SNAKE_CASE | MAX_TIMEOUT, RECV_BUFFER_SIZE    |
+| Filenames          | snake_case       | http_utils.cpp, client_state.h   |
+
+### Indentation & Bracing
+- Use 4 spaces per indentation level (no tabs)
+- Always use braces, even for one-line bodies
+- Style:
+```bash
+  if (condition) {
+	// ...
+  } 
+  else {
+	// ...
+  }
+```
+
+### Spacing
+- One space between keywords and parentheses: if (x > 0)
+- No trailing whitespace
+- Leave blank lines between logical blocks
+
+### Comments and Documentation
+- Use //... style above declarations (especially in .h files)
+- Use /** ... */ block format for function and classes definitions:
+	  /**
+	   * @breif Sends an HTTP response to the client
+	   * @param clientSocket The socket to respond on
+	   * @returns true if success, false otherwise
+	   */
+	   bool sendResponse(int clientSocket) { ... }
+- Use consistent style:
+	- // for inline or short explanatory comments
+	- /** ... */ for “nutshell-style” explanations
+
+### General Best Practices
+- Include only necessary headers
+- Keep headers lean: only declare what’s needed
+- Keep functions short and focused
+- Group related helpers and declarations together
+

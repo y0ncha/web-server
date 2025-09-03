@@ -3,40 +3,29 @@
 #include <map>
 #include <sstream>
 
+/**
+ * @brief Represents an HTTP response and provides utilities for constructing and formatting it.
+ * @details Manages status code, status message, headers, and body.
+ */
 class Response {
-public:
-
-    int status_code = 200;
-    std::string status_text = "OK";
-    std::string version = "HTTP/1.1";
+  public:
+    // HTTP status code (e.g., 200, 404)
+    int statusCode;
+    // HTTP status message (e.g., OK, Not Found)
+    std::string statusMessage;
+    // Map of header fields
     std::map<std::string, std::string> headers;
+    // Response body
     std::string body;
 
+    // Constructs a Response with default values
+    Response();
+    // Creates a 200 OK response with body
+    static Response ok(const std::string& body);
+    // Creates a 404 Not Found response
+    static Response not_found();
+    // Creates a 400 Bad Request response
+    static Response bad_request();
+    // Converts the response to a raw HTTP string
     std::string toString() const;
-
-    // Static shortcut helpers
-    static Response not_found() {
-        Response r;
-        r.status_code = 404;
-        r.status_text = "Not Found";
-        r.body = "404 Not Found";
-        r.headers["Content-Type"] = "text/plain";
-        return r;
-    }
-    static Response bad_request() {
-        Response r;
-        r.status_code = 400;
-        r.status_text = "Bad Request";
-        r.body = "400 Bad Request";
-        r.headers["Content-Type"] = "text/plain";
-        return r;
-    }
-    static Response ok(const std::string& msg = "") {
-        Response r;
-        r.status_code = 200;
-        r.status_text = "OK";
-        r.body = msg;
-        r.headers["Content-Type"] = "text/plain";
-        return r;
-    }
 };

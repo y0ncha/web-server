@@ -1,58 +1,100 @@
 #include "client.h"
-#include <ctime>
 
+/**
+ * @brief Constructs a client with socket and address.
+ * @param s Socket descriptor
+ * @param addr Client address
+ */
 Client::Client(SOCKET s, const sockaddr_in& addr)
-    : socket(s), last_active(0),keep_alive(true), state(ClientState::AwaitingRequest) {
+    : socket(s), lastActive(0), keepAlive(true), state(ClientState::AwaitingRequest) {
     std::ostringstream oss;
     oss << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port);
-    client_addr = oss.str();
-    in_buffer.reserve(BUFF_SIZE);
-    out_buffer.reserve(BUFF_SIZE);
+    clientAddr = oss.str();
+    inBuffer.reserve(BUFF_SIZE);
+    outBuffer.reserve(BUFF_SIZE);
 }
 
+/**
+ * @brief Default constructor for Client.
+ */
 Client::Client()
-    : socket(INVALID_SOCKET), last_active(0),keep_alive(true), state(ClientState::Disconnected) {
-    client_addr = "";
-    in_buffer.reserve(BUFF_SIZE);
-	out_buffer.reserve(BUFF_SIZE);
+    : socket(INVALID_SOCKET), lastActive(0), keepAlive(true), state(ClientState::Disconnected) {
+    clientAddr = "";
+    inBuffer.reserve(BUFF_SIZE);
+    outBuffer.reserve(BUFF_SIZE);
 }
 
+/**
+ * @brief Destructor for Client.
+ */
 Client::~Client() {}
 
+/**
+ * @brief Sets client state to Disconnected.
+ */
 void Client::setDisconnected() {
     state = ClientState::Disconnected;
-    std::cout << "Client [" << client_addr << "] state changed to Disconnected\n";
+    std::cout << "Client [" << clientAddr << "] state changed to Disconnected\n";
 }
+
+/**
+ * @brief Sets client state to AwaitingRequest.
+ */
 void Client::setAwaitingRequest() {
-	last_active = time(nullptr); // For idle timeout tracking
+    lastActive = time(nullptr);
     state = ClientState::AwaitingRequest;
-    std::cout << "Client [" << client_addr << "] state changed to AwaitingRequest\n";
+    std::cout << "Client [" << clientAddr << "] state changed to AwaitingRequest\n";
 }
+
+/**
+ * @brief Sets client state to RequestBuffered.
+ */
 void Client::setRequestBuffered() {
-    last_active = time(nullptr);
+    lastActive = time(nullptr);
     state = ClientState::RequestBuffered;
-    std::cout << "Client [" << client_addr << "] state changed to RequestBuffered\n";
+    std::cout << "Client [" << clientAddr << "] state changed to RequestBuffered\n";
 }
+
+/**
+ * @brief Sets client state to ResponseReady.
+ */
 void Client::setResponseReady() {
     state = ClientState::ResponseReady;
-    std::cout << "Client [" << client_addr << "] state changed to ResponseReady\n";
+    std::cout << "Client [" << clientAddr << "] state changed to ResponseReady\n";
 }
+
+/**
+ * @brief Sets client state to Completed.
+ */
 void Client::setCompleted() {
-	in_buffer.clear();
-    out_buffer.clear();
+    inBuffer.clear();
+    outBuffer.clear();
     state = ClientState::Completed;
-    std::cout << "Client [" << client_addr << "] state changed to Completed\n";
+    std::cout << "Client [" << clientAddr << "] state changed to Completed\n";
 }
+
+/**
+ * @brief Sets client state to Aborted.
+ */
 void Client::setAborted() {
     state = ClientState::Aborted;
-    std::cout << "Client [" << client_addr << "] state changed to Aborted\n";
+    std::cout << "Client [" << clientAddr << "] state changed to Aborted\n";
 }
 
-bool Client::isIdle(int timeout_sec) const {
-    return (difftime(time(nullptr), last_active) > timeout_sec && state == ClientState::AwaitingRequest);
+/**
+ * @brief Checks if client is idle for longer than timeoutSec seconds.
+ * @param timeoutSec Timeout in seconds
+ * @return True if idle, false otherwise
+ */
+bool Client::isIdle(int timeoutSec) const {
+    return (difftime(time(nullptr), lastActive) > timeoutSec && state == ClientState::AwaitingRequest);
 }
 
+/**
+ * @brief Buffers incoming request data.
+ * @param data Incoming data
+ */
 void Client::bufferRequest(const std::string& data) {
-	in_buffer.append(data);
+    inBuffer.append(data);
     setRequestBuffered();
 }
