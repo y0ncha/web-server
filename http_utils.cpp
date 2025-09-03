@@ -16,6 +16,11 @@ Response handleGet(const Request& request) {
     } 
 }
 
+/**
+ * @brief Handles POST requests. Currently only supports /echo endpoint.
+ * @param request HTTP request
+ * @return HTTP response
+ */
 Response handlePost(const Request& request) {
     if (request.path == "/echo") { // Echo endpoint
         return echo(request);
@@ -25,6 +30,11 @@ Response handlePost(const Request& request) {
     }
 }
 
+/**
+ * @brief Handles HEAD requests by fetching the HTML file and returning headers only.
+ * @param request HTTP request
+ * @return HTTP response with headers only
+ */
 Response handleHead(const Request& request) {
 	Response response = fetchHtmlFile(request);
 	response.body.clear(); // No body for HEAD
