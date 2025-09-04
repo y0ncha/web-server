@@ -36,16 +36,16 @@
       ]
     },
     {
-      "name": "GET / (default index.html)",
+      "name": "GET /index.html (default index.html)",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/",
+          "raw": "http://localhost:8080/index.html",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8080",
-          "path": [""]
+          "path": ["index.html"]
         }
       },
       "description": "Loads index.html",
@@ -67,20 +67,19 @@
       ]
     },
     {
-      "name": "GET /about?lang=fr",
+      "name": "GET /about.html?lang=fr",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/about?lang=fr",
+          "raw": "http://localhost:8080/about.html?lang=fr",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8080",
-          "path": ["about"],
-          "query": [{ "key": "lang", "value": "fr" }]
+          "path": ["about.html"]
         }
       },
-      "description": "Shows parameterized fetch",
+      "description": "Loads about.fr.html",
       "event": [
         {
           "listen": "test",
@@ -88,10 +87,244 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 200\", function () {",
-              "    pm.expect([200]).to.include(pm.response.code);",
+              "    pm.response.to.have.status(200);",
               "});",
               "pm.test(\"Content-Type is text/html\", function () {",
               "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /data.txt (create new file)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": { "mode": "raw", "raw": "Hello world" },
+        "url": {
+          "raw": "http://localhost:8080/data.txt",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["data.txt"]
+        }
+      },
+      "description": "Tests file creation for .txt",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Content-Type is text/plain\", function () {",
+              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /data.txt (file exists)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/data.txt",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["data.txt"]
+        }
+      },
+      "description": "Tests deletion for .txt",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /data.html (create new file)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "text/html" }],
+        "body": { "mode": "raw", "raw": "<html><body>Hello HTML</body></html>" },
+        "url": {
+          "raw": "http://localhost:8080/data.html",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["data.html"]
+        }
+      },
+      "description": "Tests file creation for .html",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Content-Type is text/plain\", function () {",
+              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /data.html (file exists)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/data.html",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["data.html"]
+        }
+      },
+      "description": "Tests deletion for .html",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /index.html (should fail)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "text/html" }],
+        "body": { "mode": "raw", "raw": "<html><body>Should Fail</body></html>" },
+        "url": {
+          "raw": "http://localhost:8080/index.html",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["index.html"]
+        }
+      },
+      "description": "Should fail for index.html PUT",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /index.html (should fail)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/index.html",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["index.html"]
+        }
+      },
+      "description": "Should fail for index.html DELETE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /about.html (should fail)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "text/html" }],
+        "body": { "mode": "raw", "raw": "<html><body>Should Fail</body></html>" },
+        "url": {
+          "raw": "http://localhost:8080/about.html",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["about.html"]
+        }
+      },
+      "description": "Should fail for about.html PUT",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /about.html (should fail)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/about.html",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["about.html"]
+        }
+      },
+      "description": "Should fail for about.html DELETE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
               "});"
             ]
           }
@@ -195,147 +428,6 @@
       ]
     },
     {
-      "name": "PUT /data (create new file)",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "text/plain" }],
-        "body": { "mode": "raw", "raw": "Hello world" },
-        "url": {
-          "raw": "http://localhost:8080/data",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["data"]
-        }
-      },
-      "description": "Tests file creation",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 201\", function () {",
-              "    pm.response.to.have.status(201);",
-              "});",
-              "pm.test(\"Content-Type is text/plain\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "DELETE /data (file exists)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/data",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["data"]
-        }
-      },
-      "description": "Tests deletion",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "DELETE /data (file does not exist)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/data",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["data"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 404\", function () {",
-              "    pm.response.to.have.status(404);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "DELETE /about (invalid extension)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/about",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["about"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 404\", function () {",
-              "    pm.response.to.have.status(404);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "DELETE /invalid/path (invalid path)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/invalid/path",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["invalid", "path"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 400\", function () {",
-              "    pm.response.to.have.status(400);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "PUT / (root, invalid)",
       "request": {
         "method": "PUT",
@@ -357,220 +449,6 @@
             "exec": [
               "pm.test(\"Status code is 400\", function () {",
               "    pm.response.to.have.status(400);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "PUT /index (create .txt file)",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "text/plain" }],
-        "body": { "mode": "raw", "raw": "Index file content" },
-        "url": {
-          "raw": "http://localhost:8080/index",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["index"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 201\", function () {",
-              "    pm.expect(201).to.include(pm.response.code);",
-              "});",
-              "pm.test(\"Content-Type is text/plain\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "DELETE /index (delete .txt file)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/index",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["index"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200 or 404\", function () {",
-              "    pm.expect([200,404]).to.include(pm.response.code);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "PUT /about (create .txt file)",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "text/plain" }],
-        "body": { "mode": "raw", "raw": "About file content" },
-        "url": {
-          "raw": "http://localhost:8080/about",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["about"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 201 or 200\", function () {",
-              "    pm.expect([201,200]).to.include(pm.response.code);",
-              "});",
-              "pm.test(\"Content-Type is text/plain\", function () {",
-              "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "DELETE /about (delete .txt file)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/about",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["about"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200 or 404\", function () {",
-              "    pm.expect([200,404]).to.include(pm.response.code);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "PUT /data (create for HEAD test)",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "text/plain" }],
-        "body": { "mode": "raw", "raw": "HEAD test content" },
-        "url": {
-          "raw": "http://localhost:8080/data",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["data"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200 or 201\", function () {",
-              "    pm.expect([200,201]).to.include(pm.response.code);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "GET /data (for HEAD comparison)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/data",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["data"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.environment.set(\"get_content_length\", pm.response.headers.get(\"Content-Length\"));",
-              "pm.environment.set(\"get_content_type\", pm.response.headers.get(\"Content-Type\"));",
-              "pm.environment.set(\"get_body_length\", pm.response.text().length.toString());",
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "HEAD /data (compare headers with GET)",
-      "request": {
-        "method": "HEAD",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/data",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["data"]
-        }
-      },
-      "description": "Checks header match",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test(\"Content-Type matches GET\", function () {",
-              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.eql(pm.environment.get(\"get_content_type\"));",
-              "});",
-              "pm.test(\"Content-Length matches GET\", function () {",
-              "    pm.expect(pm.response.headers.get(\"Content-Length\")).to.eql(pm.environment.get(\"get_content_length\"));",
-              "});",
-              "pm.test(\"Content-Length matches GET body length\", function () {",
-              "    pm.expect(pm.response.headers.get(\"Content-Length\")).to.eql(pm.environment.get(\"get_body_length\"));",
-              "});",
-              "pm.test(\"Body is empty for HEAD\", function () {",
-              "    pm.expect(pm.response.text()).to.eql(\"\");",
               "});"
             ]
           }

@@ -33,7 +33,7 @@
     <ClCompile Include="client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="http_utils.cpp">
+    <ClCompile Include="http-utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="request.cpp">
@@ -53,7 +53,7 @@
     <ClInclude Include="client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="http_utils.h">
+    <ClInclude Include="http-utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="request.h">
@@ -67,8 +67,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="postman-tests.json">
-      <Filter>Documents</Filter>
-    </None>
+    <None Include="pm.tests.json" />
   </ItemGroup>
 </Project>

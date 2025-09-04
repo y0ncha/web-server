@@ -1,6 +1,4 @@
 #include "utils.h"
-#include <chrono>
-#include <direct.h> // For _mkdir on Windows
 
 void ensureLogDir() {
     _mkdir("log"); // Creates log directory if it doesn't exist
@@ -50,16 +48,16 @@ std::string trim(const std::string& str) {
  * @param wsaError Optional WSA error code (default -1 means not provided)
  * @param port Optional port number related to the error (default -1 means not provided)
  */
-void logError(const std::string& message, int errorCode, int port) {
-	//Currently disabled to avoid file I/O overhead in high-frequency error scenarios
-    //ensureLogDir();
-    //std::ofstream logFile("log/web-server-error.log", std::ios::app);
-    //logFile << "[" << getTimestamp() << "] ";
-    //logFile << message << " (WSAError: " << errorCode << ")";
-    //if (port != -1) {
-    //    logFile << " [Port: " << port << "]";
-    //}
-    //logFile << std::endl;
+void logError(const std::string& message, int errorCode, const std::string& clientAddr) {
+	// Currently disabled to avoid file I/O overhead in high-frequency error scenarios
+    ensureLogDir();
+    std::ofstream logFile("log/web-server-error.log", std::ios::app);
+    logFile << "[" << getTimestamp() << "] ";
+    logFile << message << " (WSAError: " << errorCode << ")";
+    if (!clientAddr.empty()) {
+		logFile << " [Client: " << clientAddr << "]";
+    }
+    logFile << std::endl;
 }
 
 /**
@@ -110,17 +108,29 @@ void logClientState(const std::string& clientAddr, const std::string& oldState, 
     }
 }
 
-bool isValidPutPath(const std::string& path, std::string& baseName) {
+bool isValidPutPath(const std::string& path, std::string& baseName, std::string& extension) {
     if (path.empty() || path[0] != '/' || path.size() < 2) {
         return false;
     }
-
     std::string candidate = path.substr(1); // remove leading '/'
-    for (char c : candidate) {
+    size_t dotPos = candidate.find_last_of('.');
+    if (dotPos == std::string::npos || dotPos == 0 || dotPos == candidate.size() - 1) {
+        // No extension or invalid position
+        baseName = candidate;
+        extension = "";
+    } else {
+        baseName = candidate.substr(0, dotPos);
+        extension = candidate.substr(dotPos);
+    }
+    // Validate baseName (alphanumeric, _, -)
+    for (char c : baseName) {
         if (!std::isalnum(c) && c != '_' && c != '-') {
             return false;
         }
     }
-    baseName = candidate;
+    // Validate extension (only .txt or .html allowed)
+    if (!extension.empty() && extension != ".txt" && extension != ".html") {
+        return false;
+    }
     return true;
 }

@@ -1,4 +1,4 @@
-﻿#include "http_utils.h"
+﻿#include "http-utils.h"
 #include "response.h"
 
 /**
@@ -83,7 +83,7 @@ Response handleHead(const Request& request) {
 }
 
 /**
- * @brief Handles PUT requests by writing the request body to a .txt file.
+ * @brief Handles PUT requests by writing the request body to a file. Extension is taken from the path.
  * @param request HTTP request
  * @return HTTP response
  */
@@ -94,20 +94,18 @@ Response handlePut(const Request& request) {
         return handleBadRequest("Missing Content-Type for PUT.");
     }
     std::string contentType = ctIt->second;
-    std::string baseName;
-    if (!isValidPutPath(request.path, baseName)) {
+    std::string baseName, extension;
+    if (!isValidPutPath(request.path, baseName, extension)) {
         return handleBadRequest("Invalid or missing path for PUT: " + request.path);
     }
-    // Determine extension based on Content-Type
-    std::string extension;
-    if (contentType == "text/plain") {
-        extension = ".txt";
-    } else if (contentType == "text/html") {
-        extension = ".html";
-    } else {
-        return handleBadRequest("Unsupported Content-Type for PUT. Only text/plain and text/html allowed.");
+    // Validate extension and Content-Type match
+    if (extension == ".txt" && contentType != "text/plain") {
+        return handleBadRequest("Content-Type must be text/plain for .txt files.");
     }
-    // Block index/about and index*/about* for .html files
+    if (extension == ".html" && contentType != "text/html") {
+        return handleBadRequest("Content-Type must be text/html for .html files.");
+    }
+    // Block index*/about* for .html files
     if (extension == ".html") {
         std::string lowerBase = baseName;
         std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
@@ -140,49 +138,32 @@ Response handlePut(const Request& request) {
 }
 
 /**
- * @brief Handles DELETE requests by deleting the .txt file derived from the path.
+ * @brief Handles DELETE requests by deleting the file. Extension is taken from the path.
  * @param request HTTP request
  * @return HTTP response
  */
 Response handleDelete(const Request& request) {
-    std::string baseName;
-    if (!isValidPutPath(request.path, baseName)) {
+    std::string baseName, extension;
+    if (!isValidPutPath(request.path, baseName, extension)) {
         return handleBadRequest("Invalid or missing path for DELETE: " + request.path);
     }
-    // Try to delete .txt and .html
-    std::string filePathTxt = "C:\\temp\\" + baseName + ".txt";
-    std::string filePathHtml = "C:\\temp\\" + baseName + ".html";
-    bool deleted = false;
-    std::string deletedFile;
-    // Block index/about and index*/about* for .html files
+    // Block index*/about* for .html files
     std::string lowerBase = baseName;
     std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
-    if (lowerBase.find("index") == 0 || lowerBase.find("about") == 0) {
-        std::ifstream infileHtml(filePathHtml);
-        if (infileHtml.good()) {
-            return handleBadRequest("DELETE not allowed for index* or about* html files.");
-        }
+    if (extension == ".html" && (lowerBase.find("index") == 0 || lowerBase.find("about") == 0)) {
+        return handleBadRequest("DELETE not allowed for index* or about* html files.");
     }
-    std::ifstream infileTxt(filePathTxt);
-    if (infileTxt.good()) {
-        infileTxt.close();
-        if (std::remove(filePathTxt.c_str()) == 0) {
-            deleted = true;
-            deletedFile = filePathTxt.substr(filePathTxt.find_last_of("\\/") + 1);
-        }
+    std::string filePath = "C:\\temp\\" + baseName + extension;
+    std::ifstream infile(filePath);
+    if (!infile.good()) {
+        return handleNotFound(filePath);
     }
-    std::ifstream infileHtml(filePathHtml);
-    if (infileHtml.good()) {
-        infileHtml.close();
-        if (std::remove(filePathHtml.c_str()) == 0) {
-            deleted = true;
-            deletedFile = filePathHtml.substr(filePathHtml.find_last_of("\\/") + 1);
-        }
-    }
-    if (deleted) {
-        return handleOk(deletedFile);
+    infile.close();
+    std::string fileName = filePath.substr(filePath.find_last_of("\\/") + 1);
+    if (std::remove(filePath.c_str()) == 0) {
+        return handleOk(fileName);
     } else {
-        return handleNotFound(baseName);
+        return handleInternalError("Error deleting file: " + fileName);
     }
 }
 
@@ -232,39 +213,50 @@ Response health() {
  * @return Resolved file path or empty string if not found or invalid
  */
 std::string resolveFilePath(const std::string& path, const std::string& lang) {
-    std::string baseName;
-    if (!isValidPutPath(path, baseName) && path != "/") {
+    std::string baseName, extension;
+    if (!isValidPutPath(path, baseName, extension) && path != "/") {
         return "";
     }
     // Special case for root "/"
     if (path == "/") {
         baseName = "index";
+        extension = ".html";
     }
 
     std::string dir = "C:\\temp\\";
     std::string filePath;
 
-    // Try lang-specific file
-    if (!lang.empty()) {
-        filePath = dir + baseName + "." + lang + ".html";
-        std::ifstream fileLang(filePath);
-        if (fileLang.good()) {  
+    // If extension is present, use it directly
+    if (!extension.empty()) {
+        filePath = dir + baseName + extension;
+        std::ifstream fileDirect(filePath);
+        if (fileDirect.good()) {
             return filePath;
         }
     }
-    // Fallback to English
-    filePath = dir + baseName + ".en.html";
-    std::ifstream fileEn(filePath);
-    if (fileEn.good()) {
-        return filePath;
+    // Try lang-specific file (only for .html)
+    if (extension.empty() || extension == ".html") {
+        if (!lang.empty()) {
+            filePath = dir + baseName + "." + lang + ".html";
+            std::ifstream fileLang(filePath);
+            if (fileLang.good()) {
+                return filePath;
+            }
+        }
+        // Fallback to English
+        filePath = dir + baseName + ".en.html";
+        std::ifstream fileEn(filePath);
+        if (fileEn.good()) {
+            return filePath;
+        }
+        // Fallback to generic HTML
+        filePath = dir + baseName + ".html";
+        std::ifstream fileGeneric(filePath);
+        if (fileGeneric.good()) {
+            return filePath;
+        }
     }
-    // Fallback to generic HTML
-    filePath = dir + baseName + ".html";
-    std::ifstream fileGeneric(filePath);
-    if (fileGeneric.good()) {
-        return filePath;
-    }
-    // Fallback to .txt (for text file endpoints)
+    // Fallback to .txt (if no extension or not found)
     filePath = dir + baseName + ".txt";
     std::ifstream fileTxt(filePath);
     if (fileTxt.good()) {

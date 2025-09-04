@@ -158,7 +158,7 @@ void Server::receiveMessage(Client& client) {
     int bytesRecv = recv(client.socket, &recvBuffer[0], static_cast<int>(recvBuffer.size() - 1), 0);
     if (SOCKET_ERROR == bytesRecv) {
         client.setAborted();
-        logError("Error at recv()", WSAGetLastError(), client.socket);
+        logError("Error at recv()", WSAGetLastError(), client.clientAddr);
         closesocket(client.socket);
         return;
     }

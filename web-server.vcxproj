@@ -179,7 +179,7 @@
     <ClCompile Include="..\..\..\Desktop\TCP_server_Blocking.cpp" />
     <ClCompile Include="..\..\..\Desktop\TCP_server_NonBlocking.cpp" />
     <ClCompile Include="client.cpp" />
-    <ClCompile Include="http_utils.cpp" />
+    <ClCompile Include="http-utils.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="request.cpp" />
     <ClCompile Include="response.cpp" />
@@ -188,14 +188,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client.h" />
-    <ClInclude Include="http_utils.h" />
+    <ClInclude Include="http-utils.h" />
     <ClInclude Include="request.h" />
     <ClInclude Include="response.h" />
     <ClInclude Include="server.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="postman.json" />
+    <None Include="pm.tests.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
