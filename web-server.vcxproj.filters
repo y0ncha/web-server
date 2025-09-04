@@ -16,6 +16,9 @@
     <Filter Include="Documents">
       <UniqueIdentifier>{68a693e9-599d-487e-94eb-34fbe7420b96}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tests">
+      <UniqueIdentifier>{cac45d34-aada-4e2c-833a-d0ab23ee1fd9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -67,6 +70,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="pm.tests.json" />
+    <None Include="pm.tests.json">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="pm-basic.tests.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

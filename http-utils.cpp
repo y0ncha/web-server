@@ -15,7 +15,7 @@ Response handleGet(const Request& request) {
     if (filePath.empty()) {
         return handleNotFound(request.path);
     }
-    std::ifstream infile(filePath);
+    std::ifstream infile(filePath, std::ios::binary);
     if (!infile.good()) {
         return handleNotFound(filePath);
     }
@@ -61,11 +61,11 @@ Response handleHead(const Request& request) {
     std::string lang = request.getQparams("lang");
     std::string filePath = resolveFilePath(request.path, lang);
     if (filePath.empty()) {
-		return Response::notFound();
+        return Response::notFound();
     }
     std::ifstream infile(filePath, std::ios::binary | std::ios::ate);
     if (!infile.good()) {
-		return Response::notFound();
+        return Response::notFound();
     }
     size_t fileSize = infile.tellg();
     infile.close();

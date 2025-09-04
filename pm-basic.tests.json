@@ -1,0 +1,257 @@
+{
+  "info": {
+    "name": "Web Server Basic Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/health",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "health" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Content-Type is text/plain\", function () { pm.response.to.have.header(\"Content-Type\", \"text/plain\"); });",
+              "pm.test(\"Body matches static string\", function () { pm.expect(pm.response.text()).to.include(\"Computer Networks Web Server Assignment\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET / (root, lang=fr)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/?lang=fr",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "" ],
+          "query": [
+            {
+              "key": "lang",
+              "value": "fr"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Content-Type is text/html\", function () { pm.response.to.have.header(\"Content-Type\", \"text/html\"); });",
+              "pm.test(\"Body is not empty\", function () { pm.expect(pm.response.text().length).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "HEAD /index.html",
+      "request": {
+        "method": "HEAD",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/index.html",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "index.html" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Content-Type is text/html\", function () { pm.response.to.have.header(\"Content-Type\", \"text/html\"); });",
+              "pm.test(\"Body is empty for HEAD\", function () { pm.response.to.have.body(\"\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /echo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "Echo this text"
+        },
+        "url": {
+          "raw": "http://localhost:8080/echo",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "echo" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Content-Type is text/plain\", function () { pm.response.to.have.header(\"Content-Type\", \"text/plain\"); });",
+              "pm.test(\"Body matches input\", function () { pm.expect(pm.response.text()).to.eql(\"Echo this text\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /data.txt",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "Hello world"
+        },
+        "url": {
+          "raw": "http://localhost:8080/data.txt",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "data.txt" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 or 200\", function () { pm.expect([200,201]).to.include(pm.response.code); });",
+              "pm.test(\"Content-Type is text/plain\", function () { pm.response.to.have.header(\"Content-Type\", \"text/plain\"); });",
+              "pm.test(\"Body contains file name\", function () { pm.expect(pm.response.text()).to.include(\"data.txt\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /data.txt",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/data.txt",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "data.txt" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Content-Type is text/plain\", function () { pm.response.to.have.header(\"Content-Type\", \"text/plain\"); });",
+              "pm.test(\"Body contains file name\", function () { pm.expect(pm.response.text()).to.include(\"data.txt\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TRACE /trace",
+      "request": {
+        "method": "TRACE",
+        "header": [
+          {
+            "key": "X-Debug-Header",
+            "value": "DebugValue"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "Trace body content"
+        },
+        "url": {
+          "raw": "http://localhost:8080/trace",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "trace" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Body contains custom header\", function () { pm.expect(pm.response.text()).to.include(\"X-Debug-Header: DebugValue\"); });",
+              "pm.test(\"Body contains trace body content\", function () { pm.expect(pm.response.text()).to.include(\"Trace body content\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "OPTIONS /data.txt",
+      "request": {
+        "method": "OPTIONS",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/data.txt",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8080",
+          "path": [ "data.txt" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Allow header present\", function () { pm.expect(pm.response.headers.has(\"Allow\")).to.be.true; });",
+              "pm.test(\"Allow header lists methods\", function () { pm.expect(pm.response.headers.get(\"Allow\")).to.include(\"GET\"); pm.expect(pm.response.headers.get(\"Allow\")).to.include(\"OPTIONS\"); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
