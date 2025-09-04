@@ -207,7 +207,7 @@ void Server::sendMessage(Client& client) {
     client.keepAlive ? client.setAwaitingRequest() : client.setCompleted();
 }
 
-/**
+/**a
  * @brief Main server loop: handles connections and client events.
  * @details Uses select() and non-blocking sockets for non-blocking I/O multiplexing.
  */
