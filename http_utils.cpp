@@ -40,6 +40,11 @@ Response handleGet(const Request& request) {
  * @return HTTP response
  */
 Response handlePost(const Request& request) {
+    // Validate Content-Type
+    auto ctIt = request.headers.find("Content-Type");
+    if (ctIt == request.headers.end() || ctIt->second != "text/plain") {
+        return handleBadRequest("Unsupported Content-Type for POST. Only text/plain allowed.");
+    }
     if (request.path != "/echo") {
         return handleBadRequest("POST only supported on /echo");
     }
@@ -83,11 +88,46 @@ Response handleHead(const Request& request) {
  * @return HTTP response
  */
 Response handlePut(const Request& request) {
+    // Validate Content-Type
+    auto ctIt = request.headers.find("Content-Type");
+    if (ctIt == request.headers.end()) {
+        return handleBadRequest("Missing Content-Type for PUT.");
+    }
+
+    std::string contentType = ctIt->second;
     std::string baseName;
     if (!isValidPutPath(request.path, baseName)) {
         return handleBadRequest("Invalid or missing path for PUT: " + request.path);
     }
-    std::string filePath = "C:\\temp\\" + baseName + ".txt";
+
+    // Determine extension based on Content-Type
+    std::string extension;
+    if (contentType == "text/plain") {
+        extension = ".txt";
+    } else if (contentType == "text/html") {
+        extension = ".html";
+    } else {
+        return handleBadRequest("Unsupported Content-Type for PUT. Only text/plain and text/html allowed.");
+    }
+
+    // Block index/about and index.lang/about.lang
+    std::string lowerBase = baseName;
+    std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
+    if (lowerBase == "index" || lowerBase == "about") {
+        return handleBadRequest("PUT not allowed for index or about.");
+    }
+    // Block index.lang/about.lang for .html files
+    if (extension == ".html") {
+        size_t dotPos = lowerBase.find('.');
+        if (dotPos != std::string::npos) {
+            std::string prefix = lowerBase.substr(0, dotPos);
+            if (prefix == "index" || prefix == "about") {
+                return handleBadRequest("PUT not allowed for index.lang or about.lang files.");
+            }
+        }
+    }
+
+    std::string filePath = "C:\\temp\\" + baseName + extension;
     bool fileExists = false;
     {
         std::ifstream infile(filePath);
