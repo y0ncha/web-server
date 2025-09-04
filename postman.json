@@ -908,7 +908,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 200\", function () {",
-              "    pm.expect(200).to.include(pm.response.code);",
+              "   pm.expect([200]).to.include(pm.response.code);",
               "});"
             ]
           }

@@ -51,14 +51,15 @@ std::string trim(const std::string& str) {
  * @param port Optional port number related to the error (default -1 means not provided)
  */
 void logError(const std::string& message, int errorCode, int port) {
-    ensureLogDir();
-    std::ofstream logFile("log/web-server-error.log", std::ios::app);
-    logFile << "[" << getTimestamp() << "] ";
-    logFile << message << " (WSAError: " << errorCode << ")";
-    if (port != -1) {
-        logFile << " [Port: " << port << "]";
-    }
-    logFile << std::endl;
+	//Currently disabled to avoid file I/O overhead in high-frequency error scenarios
+    //ensureLogDir();
+    //std::ofstream logFile("log/web-server-error.log", std::ios::app);
+    //logFile << "[" << getTimestamp() << "] ";
+    //logFile << message << " (WSAError: " << errorCode << ")";
+    //if (port != -1) {
+    //    logFile << " [Port: " << port << "]";
+    //}
+    //logFile << std::endl;
 }
 
 /**

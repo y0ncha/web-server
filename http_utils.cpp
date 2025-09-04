@@ -93,42 +93,28 @@ Response handlePut(const Request& request) {
     if (ctIt == request.headers.end()) {
         return handleBadRequest("Missing Content-Type for PUT.");
     }
-
     std::string contentType = ctIt->second;
     std::string baseName;
     if (!isValidPutPath(request.path, baseName)) {
         return handleBadRequest("Invalid or missing path for PUT: " + request.path);
     }
-
     // Determine extension based on Content-Type
     std::string extension;
     if (contentType == "text/plain") {
         extension = ".txt";
-    } 
-    else if (contentType == "text/html") {
+    } else if (contentType == "text/html") {
         extension = ".html";
-    } 
-    else {
+    } else {
         return handleBadRequest("Unsupported Content-Type for PUT. Only text/plain and text/html allowed.");
     }
-
-    // Block index/about and index.lang/about.lang
-    std::string lowerBase = baseName;
-    std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
-    if (extension == ".html" && (lowerBase == "index" || lowerBase == "about")) {
-        return handleBadRequest("PUT not allowed for index.html or about.html.");
-    }
-    // Block index.lang/about.lang for .html files
+    // Block index/about and index*/about* for .html files
     if (extension == ".html") {
-        size_t dotPos = lowerBase.find('.');
-        if (dotPos != std::string::npos) {
-            std::string prefix = lowerBase.substr(0, dotPos);
-            if (prefix == "index" || prefix == "about") {
-                return handleBadRequest("PUT not allowed for index.lang or about.lang files.");
-            }
+        std::string lowerBase = baseName;
+        std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
+        if (lowerBase.find("index") == 0 || lowerBase.find("about") == 0) {
+            return handleBadRequest("PUT not allowed for index* or about* html files.");
         }
     }
-
     std::string filePath = "C:\\temp\\" + baseName + extension;
     bool fileExists = false;
     {
@@ -163,17 +149,40 @@ Response handleDelete(const Request& request) {
     if (!isValidPutPath(request.path, baseName)) {
         return handleBadRequest("Invalid or missing path for DELETE: " + request.path);
     }
-    std::string filePath = "C:\\temp\\" + baseName + ".txt";
-    std::ifstream infile(filePath);
-    if (!infile.good()) {
-        return handleNotFound(filePath);
+    // Try to delete .txt and .html
+    std::string filePathTxt = "C:\\temp\\" + baseName + ".txt";
+    std::string filePathHtml = "C:\\temp\\" + baseName + ".html";
+    bool deleted = false;
+    std::string deletedFile;
+    // Block index/about and index*/about* for .html files
+    std::string lowerBase = baseName;
+    std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
+    if (lowerBase.find("index") == 0 || lowerBase.find("about") == 0) {
+        std::ifstream infileHtml(filePathHtml);
+        if (infileHtml.good()) {
+            return handleBadRequest("DELETE not allowed for index* or about* html files.");
+        }
     }
-    infile.close();
-    std::string fileName = filePath.substr(filePath.find_last_of("\\/") + 1);
-    if (std::remove(filePath.c_str()) == 0) {
-        return handleOk(fileName);
+    std::ifstream infileTxt(filePathTxt);
+    if (infileTxt.good()) {
+        infileTxt.close();
+        if (std::remove(filePathTxt.c_str()) == 0) {
+            deleted = true;
+            deletedFile = filePathTxt.substr(filePathTxt.find_last_of("\\/") + 1);
+        }
+    }
+    std::ifstream infileHtml(filePathHtml);
+    if (infileHtml.good()) {
+        infileHtml.close();
+        if (std::remove(filePathHtml.c_str()) == 0) {
+            deleted = true;
+            deletedFile = filePathHtml.substr(filePathHtml.find_last_of("\\/") + 1);
+        }
+    }
+    if (deleted) {
+        return handleOk(deletedFile);
     } else {
-        return handleInternalError("Error deleting file: " + fileName);
+        return handleNotFound(baseName);
     }
 }
 
