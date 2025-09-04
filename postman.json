@@ -215,8 +215,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
               "});",
               "pm.test(\"Content-Type is text/plain\", function () {",
               "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
@@ -383,8 +383,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 201 or 200\", function () {",
-              "    pm.expect([201,200]).to.include(pm.response.code);",
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.expect(201).to.include(pm.response.code);",
               "});",
               "pm.test(\"Content-Type is text/plain\", function () {",
               "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
@@ -879,7 +879,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 200\", function () {",
-              "    pm.expect(200).to.include(pm.response.code);",
+              "   pm.expect([200]).to.include(pm.response.code);",
               "});"
             ]
           }

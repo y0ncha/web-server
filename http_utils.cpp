@@ -104,17 +104,19 @@ Response handlePut(const Request& request) {
     std::string extension;
     if (contentType == "text/plain") {
         extension = ".txt";
-    } else if (contentType == "text/html") {
+    } 
+    else if (contentType == "text/html") {
         extension = ".html";
-    } else {
+    } 
+    else {
         return handleBadRequest("Unsupported Content-Type for PUT. Only text/plain and text/html allowed.");
     }
 
     // Block index/about and index.lang/about.lang
     std::string lowerBase = baseName;
     std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
-    if (lowerBase == "index" || lowerBase == "about") {
-        return handleBadRequest("PUT not allowed for index or about.");
+    if (extension == ".html" && (lowerBase == "index" || lowerBase == "about")) {
+        return handleBadRequest("PUT not allowed for index.html or about.html.");
     }
     // Block index.lang/about.lang for .html files
     if (extension == ".html") {
