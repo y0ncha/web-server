@@ -322,7 +322,7 @@ void Server::processClient(Client& client, fd_set& readfds, fd_set& writefds, fd
         sendMessage(client);
     }
     else if (client.isIdle()) {
-        logData("web-server-clientidle.log", client.clientAddr, "Client idle for more than 120 seconds.");
+        logClientState(client.clientAddr, "AwaitingRequest", "IdleTimeout-Aborted");
         client.setAborted();
     }
 }
