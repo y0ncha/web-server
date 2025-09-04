@@ -36,19 +36,19 @@
       ]
     },
     {
-      "name": "GET /index.html (default index.html)",
+      "name": "GET / (default index.html)",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/index.html",
+          "raw": "http://localhost:8080/",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8080",
-          "path": ["index.html"]
+          "path": [""]
         }
       },
-      "description": "Loads index.html",
+      "description": "Loads index.html via root path",
       "event": [
         {
           "listen": "test",
@@ -60,6 +60,46 @@
               "});",
               "pm.test(\"Content-Type is text/html\", function () {",
               "    pm.response.to.have.header(\"Content-Type\", \"text/html\");",
+              "});",
+              "// Save headers for HEAD comparison",
+              "pm.environment.set(\"index_content_type\", pm.response.headers.get(\"Content-Type\"));",
+              "pm.environment.set(\"index_content_length\", pm.response.headers.get(\"Content-Length\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "HEAD / (compare to GET /)",
+      "request": {
+        "method": "HEAD",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": [""]
+        }
+      },
+      "description": "HEAD for root, compare headers to GET /",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Content-Type matches GET /\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.eql(pm.environment.get(\"index_content_type\"));",
+              "});",
+              "pm.test(\"Content-Length matches GET /\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Length\")).to.eql(pm.environment.get(\"index_content_length\"));",
+              "});",
+              "pm.test(\"Body is empty for HEAD\", function () {",
+              "    pm.response.to.have.body(\"\");",
               "});"
             ]
           }
@@ -491,17 +531,17 @@
       ]
     },
     {
-      "name": "TRACE /empty (empty body, custom header)",
+      "name": "TRACE /trace (empty body, custom header)",
       "request": {
         "method": "TRACE",
         "header": [{ "key": "X-Empty-Header", "value": "EmptyValue" }],
         "body": { "mode": "raw", "raw": "" },
         "url": {
-          "raw": "http://localhost:8080/empty",
+          "raw": "http://localhost:8080/trace",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8080",
-          "path": ["empty"]
+          "path": ["trace"]
         }
       },
       "description": "Confirm empty body + headers echo",

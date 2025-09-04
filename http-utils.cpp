@@ -173,6 +173,9 @@ Response handleDelete(const Request& request) {
  * @return HTTP response
  */
 Response handleTrace(const Request& request) {
+    if (request.path != "/trace") {
+        return handleBadRequest(request.path);
+    }
     std::ostringstream ss;
     for (const auto& header : request.headers) {
         ss << header.first << ": " << header.second << "\r\n";
