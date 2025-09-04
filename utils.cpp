@@ -1,5 +1,10 @@
 #include "utils.h"
 #include <chrono>
+#include <direct.h> // For _mkdir on Windows
+
+void ensureLogDir() {
+    _mkdir("log"); // Creates log directory if it doesn't exist
+}
 
 /**
  * @brief Returns the current timestamp as a formatted string with milliseconds.
@@ -46,14 +51,14 @@ std::string trim(const std::string& str) {
  * @param port Optional port number related to the error (default -1 means not provided)
  */
 void logError(const std::string& message, int errorCode, int port) {
-	//For debug purposes
-    //std::ofstream logFile("web-server-error.log", std::ios::app);
-    //logFile << "[" << getTimestamp() << "] ";
-    //logFile << message << " (WSAError: " << errorCode << ")";
-    //if (port != -1) {
-    //    logFile << " [Port: " << port << "]";
-    //}
-    //logFile << std::endl;
+    ensureLogDir();
+    std::ofstream logFile("log/web-server-error.log", std::ios::app);
+    logFile << "[" << getTimestamp() << "] ";
+    logFile << message << " (WSAError: " << errorCode << ")";
+    if (port != -1) {
+        logFile << " [Port: " << port << "]";
+    }
+    logFile << std::endl;
 }
 
 /**
@@ -63,7 +68,8 @@ void logError(const std::string& message, int errorCode, int port) {
  * @param data Data to log
  */
 void logEvent(const std::string& filename, const std::string& clientAddr, const std::string& data) {
-    std::ofstream logFile(filename, std::ios::app);
+    ensureLogDir();
+    std::ofstream logFile("log/" + filename, std::ios::app);
     if (logFile.is_open()) {
         logFile << "--------------------" << std::endl;
         logFile << "[" << getTimestamp() << "] [" << clientAddr << "]" << std::endl;
@@ -80,9 +86,10 @@ void logEvent(const std::string& filename, const std::string& clientAddr, const 
  * @param data Data to log
  */
 void logData(const std::string& filename, const std::string& data) {
-    std::ofstream logFile(filename, std::ios::app);
+    ensureLogDir();
+    std::ofstream logFile("log/" + filename, std::ios::app);
     if (logFile.is_open()) {
-		logFile << data << std::endl;
+        logFile << data << std::endl;
     }
 }
 
@@ -93,7 +100,8 @@ void logData(const std::string& filename, const std::string& data) {
  * @param newState New state
  */
 void logClientState(const std::string& clientAddr, const std::string& oldState, const std::string& newState) {
-    std::ofstream logFile("web-server-clientstate.log", std::ios::app);
+    ensureLogDir();
+    std::ofstream logFile("log/web-server-clientstate.log", std::ios::app);
     if (logFile.is_open()) {
         logFile << "[" << getTimestamp() << "] [" << clientAddr << "] "
                 << "State transition: " << oldState << " -> " << newState << std::endl;
