@@ -23,7 +23,7 @@
 class Server {
 public:
 	// Constructor: initializes Winsock and sets up the listening socket.
-    Server(const std::string& ip, int port, std::size_t bufferSize = 1024);
+    Server(const std::string& ip, int port, std::size_t bufferSize = 1024, std::time_t idleTImeout = 120);
 	// Destructor: cleans up all client connections and Winsock.
     ~Server();
 	// Main server loop: handles connections and client events.
@@ -34,7 +34,8 @@ private:
     SOCKET listenSocket; // Listening socket
     std::map<SOCKET, Client> clients; // Connected clients
     const std::size_t BUFF_SIZE; // Max size of the buffer
-    const time_t CLIENT_TIMEOUT = 120; // 2 minutes
+    const time_t CLIENT_TIMEOUT; // 2 minutes
+    long long iteration; // Loop iteration counter
 
     // Starts listening for incoming connections
     bool listen();

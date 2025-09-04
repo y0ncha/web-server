@@ -12,10 +12,13 @@ std::string getTimestamp();
 std::string trim(const std::string& str);
 
 // Logs an error message with timestamp to a file in the working directory
-void logError(const std::string& message, int wsaError = -1);
+void logError(const std::string& message, int wsaError = -1, int port = -1);
 
 // Logs sent or received data with timestamp and client address to a file
-void logData(const std::string& filename, const std::string& clientAddr, const std::string& data);
+void logEvent(const std::string& filename, const std::string& clientAddr, const std::string& data);
+
+// Logs arbitrary data with timestamp to a file
+void logData(const std::string& filename, const std::string& data);
 
 // Logs client state transitions with timestamp
 void logClientState(const std::string& clientAddr, const std::string& oldState, const std::string& newState);

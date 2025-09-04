@@ -1,16 +1,25 @@
 #include "utils.h"
+#include <chrono>
 
 /**
- * @brief Returns the current timestamp as a formatted string.
- * @return Timestamp string in format YYYY-MM-DD HH:MM:SS
+ * @brief Returns the current timestamp as a formatted string with milliseconds.
+ * @return Timestamp string in format YYYY-MM-DD HH:MM:SS.mmm
  */
 std::string getTimestamp() {
-    std::time_t now = std::time(nullptr);
-    char timeBuf[32];
+    using namespace std::chrono;
+    auto now = system_clock::now();
+    std::time_t now_c = system_clock::to_time_t(now);
     tm timeInfo;
-    localtime_s(&timeInfo, &now);
+    localtime_s(&timeInfo, &now_c);
+
+    char timeBuf[32];
     std::strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &timeInfo);
-    return std::string(timeBuf);
+
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+
+    char result[40];
+    std::snprintf(result, sizeof(result), "%s.%03lld", timeBuf, static_cast<long long>(ms.count()));
+    return std::string(result);
 }
 
 /**
@@ -34,15 +43,32 @@ std::string trim(const std::string& str) {
  * @brief Logs an error message with timestamp to a file in the working directory.
  * @param message Error message
  * @param wsaError Optional WSA error code (default -1 means not provided)
+ * @param port Optional port number related to the error (default -1 means not provided)
  */
-void logError(const std::string& message, int wsaError) {
-    std::string errorMsg = "[" + getTimestamp() + "] Web Server: " + message;
-    if (wsaError != -1) {
-        errorMsg += " Error: " + std::to_string(wsaError);
-    }
-    std::ofstream logFile("web-server-error.log", std::ios::app);
+void logError(const std::string& message, int errorCode, int port) {
+	//For debug purposes
+    //std::ofstream logFile("web-server-error.log", std::ios::app);
+    //logFile << "[" << getTimestamp() << "] ";
+    //logFile << message << " (WSAError: " << errorCode << ")";
+    //if (port != -1) {
+    //    logFile << " [Port: " << port << "]";
+    //}
+    //logFile << std::endl;
+}
+
+/**
+ * @brief Logs sent or received data with timestamp and client address to a file.
+ * @param filename Log file name
+ * @param clientAddr Client address string
+ * @param data Data to log
+ */
+void logEvent(const std::string& filename, const std::string& clientAddr, const std::string& data) {
+    std::ofstream logFile(filename, std::ios::app);
     if (logFile.is_open()) {
-        logFile << errorMsg << std::endl;
+        logFile << "--------------------" << std::endl;
+        logFile << "[" << getTimestamp() << "] [" << clientAddr << "]" << std::endl;
+        logFile << data << std::endl;
+        logFile << "--------------------" << std::endl;
         logFile.close();
     }
 }
@@ -53,14 +79,10 @@ void logError(const std::string& message, int wsaError) {
  * @param clientAddr Client address string
  * @param data Data to log
  */
-void logData(const std::string& filename, const std::string& clientAddr, const std::string& data) {
+void logData(const std::string& filename, const std::string& data) {
     std::ofstream logFile(filename, std::ios::app);
     if (logFile.is_open()) {
-        logFile << "--------------------" << std::endl;
-        logFile << "[" << getTimestamp() << "] [" << clientAddr << "]" << std::endl;
-        logFile << data << std::endl;
-        logFile << "--------------------" << std::endl;
-        logFile.close();
+		logFile << data << std::endl;
     }
 }
 

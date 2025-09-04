@@ -6,8 +6,8 @@
  * @param port Server port
  * @param bufferSize Buffer size for client data
  */
-Server::Server(const std::string& ip, int port, std::size_t bufferSize)
-    : ip_(ip), port_(port), BUFF_SIZE(bufferSize)
+Server::Server(const std::string& ip, int port, std::size_t bufferSize, std::time_t idleTimeout)
+	: ip_(ip), port_(port), BUFF_SIZE(bufferSize), CLIENT_TIMEOUT(idleTimeout), iteration(0)
 {
     WSAData wsaData;
     if (NO_ERROR != WSAStartup(MAKEWORD(2, 2), &wsaData)) {
@@ -158,7 +158,7 @@ void Server::receiveMessage(Client& client) {
     int bytesRecv = recv(client.socket, &recvBuffer[0], static_cast<int>(recvBuffer.size() - 1), 0);
     if (SOCKET_ERROR == bytesRecv) {
         client.setAborted();
-        logError("Error at recv()", WSAGetLastError());
+        logError("Error at recv()", WSAGetLastError(), client.socket);
         closesocket(client.socket);
         return;
     }
@@ -171,11 +171,11 @@ void Server::receiveMessage(Client& client) {
     client.inBuffer.append(recvBuffer);
 	// If incomplete request, keep buffering (state remains AwaitingRequest)
     if (!isRequestComplete(client.inBuffer)) {
-		logData("web-server-received.log", client.clientAddr, "Partial request received, waiting for more data.");
+		logEvent("web-server-received.log", client.clientAddr, "Partial request received, waiting for more data.");
         return;
     }
 	// Else full request received, log and chnage state to RequestBuffered
-    logData("web-server-received.log", client.clientAddr, recvBuffer);
+    logEvent("web-server-received.log", client.clientAddr, recvBuffer);
     client.setRequestBuffered();
 }
 
@@ -197,7 +197,7 @@ void Server::sendMessage(Client& client) {
     }
     // Log sent data with timestamp
     std::string sentData = client.outBuffer.substr(0, bytesSent);
-    logData("web-server-sent.log", client.clientAddr, sentData);
+    logEvent("web-server-sent.log", client.clientAddr, sentData);
     if (bytesSent < client.outBuffer.size()) {
         client.outBuffer = client.outBuffer.substr(bytesSent);
         // No console output, just log
@@ -207,7 +207,7 @@ void Server::sendMessage(Client& client) {
     client.keepAlive ? client.setAwaitingRequest() : client.setCompleted();
 }
 
-/**a
+/**
  * @brief Main server loop: handles connections and client events.
  * @details Uses select() and non-blocking sockets for non-blocking I/O multiplexing.
  */
@@ -221,8 +221,15 @@ void Server::run() {
         WSACleanup();
         return;
     }
-    std::cout << "Server is running, waiting for connections...\n";
+	std::cout << "Server listening on " << ip_ << ":" << port_ << std::endl;
     while (true) {
+
+        // Log iteration separator in log files with timestamp
+        std::string separator = "\n=================== Iteration: " + std::to_string(iteration) + " | " + getTimestamp() + " ===================\n";
+		logData("web-server-received.log", separator);
+		logData("web-server-sent.log", separator);
+        iteration++;
+
         fd_set readfds, writefds, errorfds;
         if (!pollEvents(readfds, writefds, errorfds)) {
             logError("Polling events failed", WSAGetLastError());
@@ -309,7 +316,6 @@ void Server::processClient(Client& client, fd_set& readfds, fd_set& writefds, fd
     if (FD_ISSET(sock, &errorfds)) {
         logError("Socket exception", WSAGetLastError());
         client.setAborted();
-        closesocket(sock);
         return;
     }
     if (FD_ISSET(sock, &readfds) && client.state == ClientState::AwaitingRequest) {
