@@ -86,6 +86,7 @@ Response Response::internalError(const std::string& body) {
  * @return HTTP response string
  */
 std::string Response::toString() const {
+
     std::ostringstream ss;
     ss << "HTTP/1.1 " << statusCode << " " << statusMessage << "\r\n";
     for (const auto& header : headers) {

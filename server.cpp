@@ -126,6 +126,8 @@ void Server::dispatch(Client& client) {
     else {
         response = handleBadRequest("Unsupported HTTP method");
     }
+
+	response.headers["Connection"] = client.keepAlive ? "keep-alive" : "close";
     client.outBuffer = response.toString();
     client.setResponseReady();
 }

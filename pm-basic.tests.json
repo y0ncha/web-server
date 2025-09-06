@@ -8,7 +8,9 @@
       "name": "GET /health",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          { "key": "Connection", "value": "close" }
+        ],
         "url": {
           "raw": "http://localhost:8080/health",
           "protocol": "http",
@@ -25,7 +27,8 @@
             "exec": [
               "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
               "pm.test(\"Content-Type is text/plain\", function () { pm.response.to.have.header(\"Content-Type\", \"text/plain\"); });",
-              "pm.test(\"Body matches static string\", function () { pm.expect(pm.response.text()).to.include(\"Computer Networks Web Server Assignment\"); });"
+              "pm.test(\"Body matches static string\", function () { pm.expect(pm.response.text()).to.include(\"Computer Networks Web Server Assignment\"); });",
+              "pm.test(\"Connection header is close\", function () { pm.response.to.have.header(\"Connection\", \"close\"); });"
             ]
           }
         }
