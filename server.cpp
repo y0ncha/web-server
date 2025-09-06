@@ -331,6 +331,6 @@ void Server::processClient(Client& client, fd_set& readfds, fd_set& writefds, fd
     }
     else if (client.isIdle()) {
         logClientState(client.clientAddr, "AwaitingRequest", "IdleTimeout-Aborted");
-        client.setAborted();
+        client.state = ClientState::Aborted;
     }
 }
