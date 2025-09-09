@@ -131,13 +131,13 @@
       ]
     },
     {
-      "name": "PUT /data.html",
+      "name": "PUT /data.txt",
       "request": {
         "method": "PUT",
         "header": [
           {
             "key": "Content-Type",
-            "value": "text/html"
+            "value": "text/plain"
           }
         ],
         "body": {
@@ -145,11 +145,11 @@
           "raw": "Hello world"
         },
         "url": {
-          "raw": "http://localhost:8080/data.html",
+          "raw": "http://localhost:8080/data.txt",
           "protocol": "http",
           "host": [ "localhost" ],
           "port": "8080",
-          "path": [ "data.html" ]
+          "path": [ "data.txt" ]
         }
       },
       "event": [
@@ -159,8 +159,8 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 201 or 200\", function () { pm.expect([200,201]).to.include(pm.response.code); });",
-              "pm.test(\"Content-Type is text/plain\", function () { pm.response.to.have.header(\"Content-Type\", \"text/html\"); });",
-              "pm.test(\"Body contains file name\", function () { pm.expect(pm.response.text()).to.include(\"data.html\"); });"
+              "pm.test(\"Content-Type is text/plain\", function () { pm.response.to.have.header(\"Content-Type\", \"text/plain\"); });",
+              "pm.test(\"Body contains file name\", function () { pm.expect(pm.response.text()).to.include(\"data.txt\"); });"
             ]
           }
         }
