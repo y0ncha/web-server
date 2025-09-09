@@ -9,13 +9,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Documents">
-      <UniqueIdentifier>{68a693e9-599d-487e-94eb-34fbe7420b96}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Tests">
       <UniqueIdentifier>{cac45d34-aada-4e2c-833a-d0ab23ee1fd9}</UniqueIdentifier>
     </Filter>
@@ -26,12 +19,6 @@
     </ClCompile>
     <ClCompile Include="server.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Desktop\TCP_server_Blocking.cpp">
-      <Filter>Documents</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Desktop\TCP_server_NonBlocking.cpp">
-      <Filter>Documents</Filter>
     </ClCompile>
     <ClCompile Include="client.cpp">
       <Filter>Source Files</Filter>
@@ -71,10 +58,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="pm.tests.json">
-      <Filter>Resource Files</Filter>
+      <Filter>Tests</Filter>
     </None>
     <None Include="pm-basic.tests.json">
-      <Filter>Resource Files</Filter>
+      <Filter>Tests</Filter>
     </None>
   </ItemGroup>
 </Project>

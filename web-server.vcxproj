@@ -176,8 +176,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Desktop\TCP_server_Blocking.cpp" />
-    <ClCompile Include="..\..\..\Desktop\TCP_server_NonBlocking.cpp" />
     <ClCompile Include="client.cpp" />
     <ClCompile Include="http-utils.cpp" />
     <ClCompile Include="main.cpp" />
